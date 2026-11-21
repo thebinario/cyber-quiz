@@ -1,0 +1,28 @@
+{
+  "id": "csrf-token",
+  "topic": "csrf",
+  "title": "Token anti-CSRF na troca de e-mail",
+  "difficulty": "medio",
+  "owasp": "A01:2025 – Broken Access Control (CWE-352) · A01:2021",
+  "summary": "A troca de e-mail aceita qualquer POST feito com o cookie de sessão.",
+  "statement": [
+    { "type": "p", "text": "O formulário de troca de e-mail envia um `POST /settings/email` autenticado só pelo cookie de sessão. Uma página maliciosa pode fazer o navegador da vítima enviar esse POST sem que ela perceba: é **CSRF**, e permitiria trocar o e-mail e tomar a conta por \"esqueci a senha\"." },
+    { "type": "p", "text": "Implemente o padrão de **token sincronizador**:" },
+    { "type": "ul", "items": [
+      "`login(userId)` cria uma sessão que guarda um token aleatório de, no mínimo, 16 caracteres, diferente em cada sessão (use `randomToken()`);",
+      "`renderEmailForm(sid)` devolve `{ status: 200, csrfToken }` com o token da sessão (ele iria num campo oculto do formulário);",
+      "`changeEmail(sid, body)` só altera o e-mail se `body.csrfToken` for exatamente o token **daquela sessão**; senão devolve `403` sem alterar nada;",
+      "sessão inexistente continua retornando `401`;",
+      "o fluxo normal (abrir o formulário e enviar com o token) continua funcionando."
+    ] },
+    { "type": "p", "text": "Cuidado com o caso de **token ausente**: `undefined` nunca pode ser considerado igual ao token da sessão." }
+  ],
+  "hints": [
+    "Gere o token no momento do login e guarde-o junto da sessão no servidor.",
+    "O atacante consegue fazer o navegador enviar o cookie, mas não consegue ler o token da página (política de mesma origem).",
+    "Compare com `typeof body.csrfToken === 'string' && body.csrfToken === session.csrfToken`."
+  ],
+  "exports": ["login", "renderEmailForm", "changeEmail"],
+  "expose": ["USERS", "SESSIONS"],
+  "explanation": "O token é um segredo por sessão que só a página legítima conhece: o navegador anexa o cookie automaticamente, mas outro site não consegue ler o token para colocá-lo na requisição forjada. O servidor precisa rejeitar token ausente ou diferente. `SameSite` nos cookies é uma camada adicional, não substituta, e o token fica inútil se houver XSS no mesmo site."
+}

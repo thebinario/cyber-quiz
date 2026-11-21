@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; worker-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Desafios de correção de código: corrija IDOR, CSRF, SQL Injection e SSRF e rode os testes no navegador.">
+  <title>Desafios de correção — Cyber Quiz</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#app">Ir para o conteúdo</a>
+
+  <header class="site-header">
+    <div class="container container-wide header-row">
+      <a class="brand" href="./">Cyber Quiz</a>
+      <nav aria-label="Principal">
+        <a href="./">Quiz</a>
+        <a href="desafios.html" aria-current="page">Desafios de código</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app" class="container container-wide" tabindex="-1">
+    <p class="muted" id="loading">Carregando desafios…</p>
+    <noscript><p class="notice">Os desafios rodam os testes no navegador e precisam de JavaScript.</p></noscript>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container container-wide">
+      <p>
+        O código que você escreve roda só no seu navegador, em um Web Worker isolado, contra bancos e redes <strong>simulados</strong>.
+        Nada é enviado a servidores. Pratique técnicas ofensivas apenas em ambientes próprios ou autorizados.
+      </p>
+      <p>
+        <a href="https://github.com/thebinario/cyber-quiz">Código e desafios no GitHub</a>
+        · o progresso fica apenas no seu navegador.
+      </p>
+    </div>
+  </footer>
+
+  <script src="assets/challenges.js"></script>
+</body>
+</html>

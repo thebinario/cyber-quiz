@@ -1,0 +1,28 @@
+{
+  "id": "idor-pedidos",
+  "topic": "idor",
+  "title": "Pedidos de outro cliente",
+  "difficulty": "facil",
+  "owasp": "A01:2021 / A01:2025 – Broken Access Control · API1:2023 – BOLA",
+  "summary": "A rota GET /api/orders/:id devolve qualquer pedido, de qualquer cliente.",
+  "statement": [
+    { "type": "p", "text": "A rota `GET /api/orders/:id` devolve o pedido pedindo apenas o `id`. Ana (`ana`) autenticada consegue ler o pedido 601, que é de Bruno, só trocando o número na URL. Isso é um **IDOR**: a aplicação autentica, mas não verifica se o objeto pertence a quem pede." },
+    { "type": "p", "text": "Corrija `getOrder(currentUser, orderId)` para que:" },
+    { "type": "ul", "items": [
+      "o dono do pedido continue lendo o próprio pedido (`status` 200 e `body` com o pedido);",
+      "outro usuário comum receba `403` ou `404` e **nenhum dado** do pedido no `body`;",
+      "um usuário com `role: 'admin'` continue podendo ler qualquer pedido;",
+      "um pedido inexistente continue retornando `404`;",
+      "o `orderId` vindo da URL como texto (`'601'`) também seja verificado."
+    ] },
+    { "type": "p", "text": "`currentUser` é o usuário da **sessão** (confiável). O `orderId` vem da requisição (não confiável)." }
+  ],
+  "hints": [
+    "A checagem de autorização precisa acontecer depois de achar o objeto e antes de devolvê-lo.",
+    "Compare `order.ownerId` com `currentUser.id`. Não confie em nada que venha do cliente para decidir quem é o dono.",
+    "Lembre da exceção do administrador: `currentUser.role === 'admin'`."
+  ],
+  "exports": ["getOrder"],
+  "expose": ["USERS", "ORDERS"],
+  "explanation": "A correção é verificar, no servidor, se o usuário autenticado é o dono do objeto (ou tem um papel que o autoriza) **antes** de devolvê-lo. Trocar IDs numéricos por UUIDs não resolveria: só dificultaria a adivinhação. A resposta pode ser 403 ou 404; 404 evita revelar que o pedido existe."
+}

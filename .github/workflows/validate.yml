@@ -22,4 +22,4 @@ jobs:
       - name: Validar questões
         run: python3 scripts/validate_questions.py
       - name: Testes da lógica
-        run: node --test tests/core.test.js
+        run: node --test tests/core.test.js tests/challenges.test.js

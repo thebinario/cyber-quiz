@@ -26,7 +26,7 @@ jobs:
         with:
           node-version: "22"
       - run: python3 scripts/validate_questions.py
-      - run: node --test tests/core.test.js
+      - run: node --test tests/core.test.js tests/challenges.test.js
 
   deploy:
     needs: validate
@@ -39,7 +39,7 @@ jobs:
       - name: Montar o site estático
         run: |
           mkdir _site
-          cp -r index.html assets data _site/
+          cp -r index.html desafios.html assets data _site/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

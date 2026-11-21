@@ -1,0 +1,29 @@
+{
+  "id": "ssrf-importar-imagem",
+  "topic": "ssrf",
+  "title": "Importar imagem por URL",
+  "difficulty": "medio",
+  "owasp": "A01:2025 – Broken Access Control (inclui SSRF) · A10:2021 – SSRF · API7:2023",
+  "summary": "O servidor baixa qualquer URL informada, inclusive localhost e o serviço de metadados.",
+  "statement": [
+    { "type": "p", "text": "A função `importImage(url)` baixa a imagem de uma URL informada pelo usuário. Como o servidor roda dentro da rede da empresa, ele alcança coisas que o usuário não alcança: `http://127.0.0.1/admin`, `http://10.0.0.5/secret`, o serviço de metadados da nuvem em `http://169.254.169.254/...`. Isso é **SSRF**." },
+    { "type": "p", "text": "Valide a URL **antes** de fazer a requisição. Quando bloqueada, devolva `{ status: 400 }` ou `{ status: 403 }` e **não** faça nenhuma conexão. Deve ser bloqueado:" },
+    { "type": "ul", "items": [
+      "esquemas diferentes de `http:` e `https:` (`file://`, `ftp://`);",
+      "loopback em qualquer forma: `127.0.0.1`, `127.1`, `2130706433`, `0x7f.0.0.1`, `0.0.0.0`, `[::1]`, `[::ffff:127.0.0.1]`;",
+      "o endereço do serviço de metadados `169.254.169.254` e as redes privadas (`10.x`, `172.16–31.x`, `192.168.x`);",
+      "**nomes** que resolvem para IP interno (`localhost`, `admin.interno`, `local.evil.example`, ...): valide o IP **resolvido** com `dns.resolve(host)`, não só o texto da URL;",
+      "truques como `http://cdn.exemplo.com@127.0.0.1/` (o host real é o que vem depois do `@`);",
+      "texto que nem é URL (`'isso não é url'`) deve gerar `400`, não uma exceção."
+    ] },
+    { "type": "p", "text": "URLs públicas legítimas (`https://cdn.exemplo.com/logo.png`) devem continuar funcionando. Disponíveis no contexto: `dns.resolve(host)` e `http.get(url, { ip, follow })`. Dica: o parser `new URL()` já normaliza muitas formas esquisitas de IPv4." }
+  ],
+  "hints": [
+    "Use `new URL(texto)` dentro de um `try/catch` e olhe `url.protocol` e `url.hostname` (para IPv6, remova os colchetes).",
+    "Resolva o host com `dns.resolve()` e valide o **IP**. Escreva uma função `isPrivateIp(ip)` cobrindo 0.x, 10.x, 127.x, 169.254.x, 172.16–31.x, 192.168.x, `::1` e IPv6 mapeado (`::ffff:...`).",
+    "Ao conectar, use `http.get(url, { ip, follow: false })` para falar com o IP que você validou. Redirecionamentos ficam para o próximo desafio."
+  ],
+  "exports": ["importImage"],
+  "expose": ["dns", "http"],
+  "explanation": "A defesa é validar o destino **já resolvido** (IP) contra uma política de rede, e não apenas o texto da URL. Blocklists de strings como `localhost` e `127.0.0.1` falham diante de formas alternativas (decimal, hexadecimal, IPv6, DNS que aponta para IP interno). Também restrinja esquemas e, em produção, some a isso egress filtering e isolamento da rede (e IMDSv2 na AWS)."
+}

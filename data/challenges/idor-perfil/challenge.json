@@ -1,0 +1,30 @@
+{
+  "id": "idor-perfil",
+  "topic": "idor",
+  "title": "Perfil: userId no corpo da requisição",
+  "difficulty": "medio",
+  "owasp": "A01:2021 / A01:2025 – Broken Access Control · API1:2023 BOLA e API3:2023 BOPLA",
+  "summary": "A atualização de perfil confia no userId e nos campos enviados pelo cliente.",
+  "statement": [
+    { "type": "p", "text": "O endpoint `PATCH /api/profiles` recebe um JSON como `{ \"userId\": \"ana\", \"displayName\": \"Ana S.\" }` e atualiza o perfil. Hoje ele confia em **tudo** que vem no corpo, o que causa dois problemas:" },
+    { "type": "ul", "items": [
+      "**IDOR de escrita:** Ana envia `userId: \"bruno\"` e altera o perfil de Bruno;",
+      "**Atribuição em massa:** Ana envia `role: \"admin\"` e se promove, já que o corpo inteiro é copiado para o perfil."
+    ] },
+    { "type": "p", "text": "Corrija `updateProfile(currentUser, body)` para que:" },
+    { "type": "ul", "items": [
+      "um usuário comum só altere o **próprio** perfil, mesmo que mande outro `userId` (o perfil de Bruno não pode mudar);",
+      "só `displayName` e `email` possam ser alterados; `role` e `userId` nunca são sobrescritos pelo corpo;",
+      "o corpo sem `userId` altere o perfil de quem está autenticado;",
+      "um administrador possa editar o perfil indicado em `body.userId`."
+    ] }
+  ],
+  "hints": [
+    "Decida o alvo da operação a partir da sessão (`currentUser`), não do corpo.",
+    "O administrador é a única exceção em que `body.userId` escolhe o alvo.",
+    "Em vez de `Object.assign(profile, body)`, copie apenas uma lista fixa de campos permitidos."
+  ],
+  "exports": ["updateProfile"],
+  "expose": ["USERS", "PROFILES"],
+  "explanation": "Duas falhas diferentes se combinam: o alvo vem do cliente (BOLA/IDOR) e as propriedades vêm do cliente (BOPLA/mass assignment). A correção usa a identidade da sessão para escolher o objeto e uma allowlist de campos editáveis. Validar apenas o formato do `userId` não resolveria nenhuma das duas."
+}

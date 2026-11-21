@@ -1,0 +1,31 @@
+{
+  "id": "ssrf-redirecionamento",
+  "topic": "ssrf",
+  "title": "Redirecionamentos e DNS rebinding",
+  "difficulty": "dificil",
+  "owasp": "A01:2025 – Broken Access Control (inclui SSRF) · A10:2021 – SSRF",
+  "summary": "A validação olha só a URL inicial; o redirecionamento e o DNS levam ao alvo interno.",
+  "statement": [
+    { "type": "p", "text": "Esta versão de `importImage` já valida o IP da URL (a função `isPrivateIp` está no contexto). Mesmo assim ela ainda é vulnerável de duas formas:" },
+    { "type": "ul", "items": [
+      "**Redirecionamento:** `https://cdn.exemplo.com/redir-internal` é público, mas responde `302` para `http://admin.interno/secret`. O `http.get` segue o redirecionamento sozinho e o servidor acaba lendo a rede interna;",
+      "**DNS rebinding:** `rebind.evil.example` resolve para um IP público na primeira consulta (validação) e para `127.0.0.1` na seguinte (conexão)."
+    ] },
+    { "type": "p", "text": "Corrija para que:" },
+    { "type": "ul", "items": [
+      "**cada salto** de redirecionamento seja validado (esquema, IP resolvido e `isPrivateIp`) antes de conectar; use `follow: false` e siga os redirecionamentos você mesmo;",
+      "a conexão use o **IP já validado** (`http.get(url, { ip, follow: false })`), sem nova consulta de DNS;",
+      "no máximo **3 redirecionamentos** sejam seguidos; passou disso (ou se houver um laço), devolva `400`;",
+      "redirecionamento legítimo entre hosts públicos (`/redir-ok`) continue funcionando e devolva o conteúdo final com `status` 200;",
+      "bloqueios devolvam `400` ou `403` e **nenhuma conexão** a IP interno seja feita (inclusive para `file://` vindo de um redirecionamento)."
+    ] }
+  ],
+  "hints": [
+    "Faça um laço: valide a URL atual, conecte com `follow: false`, e se vier `3xx` com `headers.location`, repita com a nova URL.",
+    "Resolva relativos com `new URL(location, urlAtual)`.",
+    "Limite os saltos (no máximo 3 redirecionamentos): depois disso devolva `400`."
+  ],
+  "exports": ["importImage"],
+  "expose": ["dns", "http", "isPrivateIp"],
+  "explanation": "Validar só a URL inicial não basta: cada redirecionamento é uma nova requisição e precisa passar pela mesma validação. E validar um IP e depois deixar o cliente resolver o nome de novo abre espaço para DNS rebinding; a solução é conectar no IP que foi validado. Em produção, some a isso um egress proxy e uma rede sem acesso ao que é interno."
+}

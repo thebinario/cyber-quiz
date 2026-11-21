@@ -1,0 +1,27 @@
+{
+  "id": "csrf-cookie-origin",
+  "topic": "csrf",
+  "title": "Cookie SameSite e checagem de Origin",
+  "difficulty": "dificil",
+  "owasp": "A01:2025 – Broken Access Control (CWE-352) · A01:2021",
+  "summary": "Transferência bancária sem SameSite, sem checar Origin e aceitando qualquer método.",
+  "statement": [
+    { "type": "p", "text": "O banco usa um cookie de sessão simples e a rota de transferência não confere de onde vem a requisição. Aplique defesas em camadas contra CSRF:" },
+    { "type": "ul", "items": [
+      "`sessionCookie(sid)` deve devolver um `Set-Cookie` com `HttpOnly`, `Secure` e `SameSite=Lax` (ou `Strict`);",
+      "`transfer(request)` só aceita o método `POST`; qualquer outro devolve `405` sem mexer nos saldos;",
+      "a requisição precisa vir da origem `ALLOWED_ORIGIN`: compare o cabeçalho `Origin` **exatamente**; se ele não existir, use a origem do `Referer`; se não houver nenhum dos dois, devolva `403`;",
+      "`https://banco.exemplo.com.evil.com` **não** é a mesma origem que `https://banco.exemplo.com` (cuidado com `startsWith`/`includes`);",
+      "uma transferência legítima feita a partir de `ALLOWED_ORIGIN` continua funcionando."
+    ] },
+    { "type": "p", "text": "`request` tem o formato `{ method, headers, body, sid }`, com os nomes de cabeçalho em minúsculas (`headers.origin`, `headers.referer`)." }
+  ],
+  "hints": [
+    "A comparação de origem deve ser de igualdade, não de prefixo.",
+    "`new URL(referer).origin` extrai esquema + host + porta do Referer.",
+    "Valor `Origin: null` também deve ser recusado: ele não é igual a `ALLOWED_ORIGIN`."
+  ],
+  "exports": ["sessionCookie", "transfer"],
+  "expose": ["ACCOUNTS", "ALLOWED_ORIGIN"],
+  "explanation": "SameSite=Lax impede o envio do cookie em POSTs vindos de outros sites; a checagem de Origin/Referer é uma segunda camada, e o ideal é somar um token anti-CSRF. A comparação precisa ser exata: validar por prefixo ou substring deixa passar domínios como `banco.exemplo.com.evil.com`. Operações que alteram estado nunca devem responder a GET."
+}

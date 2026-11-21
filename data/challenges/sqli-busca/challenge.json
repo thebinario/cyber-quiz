@@ -1,0 +1,28 @@
+{
+  "id": "sqli-busca",
+  "topic": "sqli",
+  "title": "Busca de produtos: LIKE e ORDER BY",
+  "difficulty": "dificil",
+  "owasp": "A05:2025 – Injection (CWE-89) · A03:2021 – Injection",
+  "summary": "A busca concatena o termo no LIKE e a coluna de ordenação no ORDER BY.",
+  "statement": [
+    { "type": "p", "text": "A busca de produtos concatena **dois** valores do cliente: o termo (`q`) dentro de um `LIKE` e o nome da coluna de ordenação (`sort`) no `ORDER BY`. Um atacante usa `' UNION SELECT username, password_hash FROM users --` e recebe os hashes de senha no lugar dos produtos." },
+    { "type": "p", "text": "Corrija `searchProducts(q, sort)` para que:" },
+    { "type": "ul", "items": [
+      "o termo seja enviado como **parâmetro** (`LIKE ?`, com os `%` fazendo parte do valor);",
+      "o `ORDER BY` só aceite uma lista fixa de colunas (`name`, `price`, `category`); qualquer outro valor devolve `{ status: 400, rows: [] }` **sem** consultar o banco;",
+      "o `UNION` e os payloads `' OR '1'='1` e `' OR 1=1 --` não vazem dados nem retornem todos os produtos;",
+      "uma busca legítima (inclusive `d'água`, com apóstrofo) e a ordenação por `price` continuem funcionando;",
+      "sem `sort`, a ordenação padrão é por `name`."
+    ] },
+    { "type": "p", "text": "Atenção: **placeholders não funcionam para nomes de coluna ou tabela**. Para o `ORDER BY`, a defesa é uma allowlist." }
+  ],
+  "hints": [
+    "Use `db.query(sql, ['%' + q + '%'])` com `LIKE ?`.",
+    "Para o `ORDER BY`, mantenha um array com as colunas permitidas e valide com `includes` antes de montar o SQL.",
+    "A string concatenada no `ORDER BY` só pode ser um valor que **você** escolheu da allowlist, nunca o texto do cliente."
+  ],
+  "exports": ["searchProducts"],
+  "expose": ["db"],
+  "explanation": "Valores (como o termo do LIKE) vão como parâmetros. Identificadores (nomes de coluna) não podem ser parametrizados, então a defesa é uma allowlist: o cliente escolhe entre opções permitidas e o servidor usa o texto que ele mesmo definiu. Validar tamanho, remover palavras como UNION ou confiar em um WAF não resolve a causa."
+}

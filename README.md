@@ -6,7 +6,7 @@ Quiz de segurança de aplicações no estilo das avaliações de habilidades do 
 
 ## O que cobre
 
-Temas da primeira versão: **IDOR**, **CSRF**, **SQL Injection** e **SSRF** (86 questões). Cada tema pergunta:
+Temas da primeira versão: **IDOR**, **CSRF**, **SQL Injection** e **SSRF** (85 questões e 8 desafios de código). Cada tema pergunta:
 
 - o que é a vulnerabilidade (conceito);
 - como explorar e como testar (exploração e detecção);
@@ -14,7 +14,26 @@ Temas da primeira versão: **IDOR**, **CSRF**, **SQL Injection** e **SSRF** (86 
 - como corrigir e quantas formas de correção existem;
 - em qual categoria do **OWASP Top 10** ela se encaixa (edições 2021 e 2025 indicadas na pergunta; IDOR/BOLA e SSRF também aparecem no OWASP API Top 10:2023).
 
-## Modos
+## Desafios de código
+
+Em `desafios.html` cada desafio tem **enunciado de um lado e o código vulnerável do outro**, no estilo LeetCode. Você corrige o código, clica em **Executar testes** (ou Ctrl/⌘ + Enter) e o desafio só é concluído quando todos os testes passam, inclusive os que garantem que o uso legítimo continua funcionando.
+
+| Tema | Desafios |
+|---|---|
+| IDOR | Pedidos de outro cliente · Perfil: `userId` no corpo (BOLA + mass assignment) |
+| CSRF | Token anti-CSRF na troca de e-mail · Cookie SameSite e checagem de Origin |
+| SQL Injection | Login com concatenação · Busca com `LIKE` e `ORDER BY` (allowlist) |
+| SSRF | Importar imagem por URL · Redirecionamentos e DNS rebinding |
+
+Como funciona, sem backend:
+
+- o código roda no seu navegador, em um **Web Worker** sem acesso ao DOM nem à rede, com limite de 4 s (laço infinito é interrompido);
+- o banco é um interpretador de SQL simplificado (`assets/minisql.js`) que **sofre injeção de verdade** quando a consulta é concatenada, e a rede é simulada (`assets/mininet.js`): nada é consultado ou enviado de verdade;
+- rascunhos e desafios resolvidos ficam só no `localStorage`.
+
+Cada desafio fica em `data/challenges/<id>/` com `challenge.json` (enunciado, dicas), `context.js` (dados somente leitura), `starter.js` (código vulnerável), `tests.js` e `solution.js`. O CI garante que o código inicial falha, que a solução passa em todos os testes e que uma "correção" que nega tudo é reprovada.
+
+## Modos do quiz
 
 - **Misto**: perguntas de todos os temas, distribuídas de forma equilibrada.
 - **Por tema**: só um assunto.
@@ -34,8 +53,10 @@ Abrir o `index.html` direto por `file://` não funciona, porque o navegador bloq
 
 ```bash
 python3 scripts/validate_questions.py   # estrutura e qualidade do banco
-node --test tests/core.test.js          # sorteio, correção e resumo
+node --test tests/core.test.js tests/challenges.test.js   # sorteio/correção e desafios
 ```
+
+Os testes dos desafios exigem que o código inicial seja vulnerável, que a solução passe e que correções plausíveis mas incompletas sejam pegas.
 
 O validador falha em erros de estrutura (ids, índices de resposta, duplicatas) e avisa sobre vícios que entregam a resposta, como a alternativa certa ser sempre a mais longa ou ficar sempre na mesma posição.
 

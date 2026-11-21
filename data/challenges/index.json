@@ -1,0 +1,12 @@
+{
+  "challenges": [
+    "idor-pedidos",
+    "idor-perfil",
+    "csrf-token",
+    "csrf-cookie-origin",
+    "sqli-login",
+    "sqli-busca",
+    "ssrf-importar-imagem",
+    "ssrf-redirecionamento"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "sqli-login",
+  "topic": "sqli",
+  "title": "Login com SQL Injection",
+  "difficulty": "facil",
+  "owasp": "A05:2025 – Injection (CWE-89) · A03:2021 – Injection",
+  "summary": "O login monta a consulta concatenando usuário e senha.",
+  "statement": [
+    { "type": "p", "text": "A função `login(username, password)` monta o SQL concatenando o que o usuário digitou. Com o usuário `admin'--` o resto da consulta vira comentário e a verificação da senha desaparece: login como administrador sem saber a senha." },
+    { "type": "p", "text": "Corrija o código para que:" },
+    { "type": "ul", "items": [
+      "a entrada do usuário seja sempre tratada como **dado**, nunca como parte do SQL (use `db.query(sql, params)` com placeholders `?`);",
+      "payloads como `admin'--` e `' OR '1'='1` não autentiquem ninguém;",
+      "usuários e senhas **legítimos com apóstrofo** (`d'arc`, `it's-ana-2024`) continuem conseguindo entrar;",
+      "o login correto continue devolvendo `{ ok: true, user }` e o errado `{ ok: false }`."
+    ] },
+    { "type": "p", "text": "O banco do desafio é um interpretador de SQL simplificado que, como um banco real, sofre injeção se a consulta for montada por concatenação. A função `hash(senha)` já faz parte do contexto." }
+  ],
+  "hints": [
+    "Troque os valores concatenados por `?` e passe-os no segundo argumento: `db.query(sql, [username, hash(password)])`.",
+    "Escapar aspas manualmente é frágil. Parâmetros resolvem o problema na origem: o banco nunca interpreta o valor como código.",
+    "Se `rows.length` for 0, o login falhou."
+  ],
+  "exports": ["login"],
+  "expose": ["db"],
+  "explanation": "Consultas parametrizadas (prepared statements) separam o código SQL dos dados: o texto da consulta é fixo e os valores viajam à parte, então nenhuma entrada consegue fechar uma aspa ou criar um comentário. É a defesa principal contra SQL Injection; escaping manual, listas de palavras proibidas e WAF são camadas fracas ou complementares."
+}
