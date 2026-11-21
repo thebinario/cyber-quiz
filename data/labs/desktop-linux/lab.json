@@ -1,0 +1,26 @@
+{
+  "id": "desktop-linux",
+  "mode": "desktop",
+  "title": "Desktop Linux: relatório escondido",
+  "difficulty": "facil",
+  "category": "Linux e reconhecimento",
+  "summary": "Um Linux com interface gráfica no navegador. Ache o relatório de incidentes arquivado em uma pasta oculta.",
+  "flagSha256": "cc33d86e48a137cf583cf6bb5020782ec6034a602b5f2abe9771d53727e4bf81",
+  "flagFormat": "FLAG{...}",
+  "statement": [
+    { "type": "p", "text": "Você tem acesso ao **desktop** de uma estação Linux como o usuário `agent`. O relatório do último incidente foi arquivado fora do lugar óbvio, em uma pasta oculta do diretório pessoal, e o conteúdo está codificado." },
+    { "type": "p", "text": "**Objetivo:** localizar o relatório, decodificá-lo e obter a flag, no formato `FLAG{...}`." },
+    { "type": "ul", "items": [
+      "a tela ao lado é um Linux de verdade (Alpine com Xorg e Openbox) rodando no navegador, sem acesso à internet;",
+      "clique na tela para dar foco ao teclado e ao mouse; o terminal (xterm) já está aberto;",
+      "clique com o botão direito no fundo da tela para abrir o menu do Openbox;",
+      "cole a flag no campo abaixo da tela para validar."
+    ] }
+  ],
+  "hints": [
+    "Pastas que começam com `.` ficam ocultas. No terminal, `ls -la ~` mostra tudo.",
+    "`find ~ -type f` lista todos os arquivos, inclusive os de pastas ocultas. Leia o conteúdo antes de decidir.",
+    "Se o texto parece Base64, use `base64 -d`. O valor está depois do `=` no arquivo."
+  ],
+  "explanation": "Mesmo em um desktop gráfico, o reconhecimento é o mesmo: pastas ocultas (`.cache`, `.config`) guardam backups e relatórios esquecidos, e Base64 é só uma codificação reversível, não criptografia."
+}

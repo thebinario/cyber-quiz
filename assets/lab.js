@@ -3,6 +3,9 @@
 
   var STORAGE_KEY = 'cyber-quiz:labs:v1';
   var VENDOR = 'lab/vendor/';
+  var GUI = 'lab/gui/';
+  var GUI_MEMORY_MB = 512;
+  var guiManifest = null;
   var DIFFICULTY_LABELS = { facil: 'Fácil', medio: 'Médio', dificil: 'Difícil' };
   var MEMORY_MB = 256;
   var COLS = 80;
@@ -158,9 +161,13 @@
     if (index) return Promise.resolve(index);
     return fetchJson('data/labs/index.json').then(function (data) {
       return Promise.all(data.labs.map(function (id) { return fetchJson('data/labs/' + id + '/lab.json'); })).then(function (all) {
-        all.forEach(function (m) { metas[m.id] = m; });
-        index = data.labs;
-        return index;
+        var needsGui = all.some(function (m) { return m.mode === 'desktop'; });
+        return (needsGui ? fetchJson(GUI + 'manifest.json').catch(function () { return null; }) : Promise.resolve(null)).then(function (manifest) {
+          guiManifest = manifest;
+          all.forEach(function (m) { metas[m.id] = m; });
+          index = data.labs.filter(function (id) { return metas[id].mode !== 'desktop' || manifest; });
+          return index;
+        });
       });
     });
   }
@@ -202,6 +209,7 @@
     session = null;
     s.dead = true;
     if (s.raf) cancelAnimationFrame(s.raf);
+    if (s.timer) window.clearTimeout(s.timer);
     try { if (s.emulator) s.emulator.destroy(); } catch (e) { /* ignora */ }
     try { if (s.term) s.term.dispose(); } catch (e) { /* ignora */ }
   }
@@ -308,13 +316,92 @@
     });
   }
 
+
+  /* ---------- sessão com desktop gráfico (9p + Xorg) ---------- */
+
+  function startDesktop(meta, ui) {
+    destroySession();
+    var s = { dead: false, emulator: null, term: null, raf: 0, pending: [], timer: 0 };
+    session = s;
+    ui.startButton.disabled = true;
+    ui.restartButton.disabled = true;
+    ui.termBox.replaceChildren();
+    ui.status('Carregando componentes…');
+
+    var textLayer = h('div', { className: 'screen-text' });
+    var canvas = h('canvas', { className: 'screen-canvas', tabindex: '0', 'aria-label': 'Tela do desktop Linux. Clique para dar foco ao teclado e ao mouse.' });
+    var screenBox = h('div', { className: 'screen-box' }, textLayer, canvas);
+    ui.termBox.appendChild(screenBox);
+
+    var progress = {};
+    function report() {
+      var received = 0;
+      Object.keys(progress).forEach(function (k) { received += progress[k]; });
+      ui.status('Baixando o sistema… ' + formatMB(received));
+    }
+    function dl(name, url) {
+      return fetchBuffer(url, function (got) { progress[name] = got; report(); });
+    }
+
+    Promise.all([
+      loadScript(VENDOR + 'libv86.js'),
+      dl('bios', VENDOR + 'seabios.bin'),
+      dl('vga', VENDOR + 'vgabios.bin')
+    ]).then(function (res) {
+      if (s.dead) return;
+      ui.status('Iniciando o Linux (o sistema de arquivos é baixado sob demanda; o desktop pode levar 1 a 3 minutos)…');
+      var emulator = new window.V86({
+        wasm_path: VENDOR + 'v86.wasm',
+        screen_container: screenBox,
+        bios: { buffer: res[1] },
+        vga_bios: { buffer: res[2] },
+        filesystem: { baseurl: GUI + guiManifest.baseurl, basefs: GUI + guiManifest.fs },
+        bzimage_initrd_from_filesystem: true,
+        cmdline: 'rw root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose modules=virtio_pci console=ttyS0,115200 tsc=reliable mitigations=off random.trust_cpu=on',
+        memory_size: GUI_MEMORY_MB * 1024 * 1024,
+        vga_memory_size: 8 * 1024 * 1024,
+        autostart: true,
+        disable_speaker: true
+      });
+      s.emulator = emulator;
+
+      var ready = false;
+      var tail = '';
+      function markReady() {
+        if (ready || s.dead) return;
+        ready = true;
+        ui.status('Pronto. Clique na tela para usar teclado e mouse.');
+        ui.restartButton.disabled = false;
+        canvas.focus();
+      }
+      emulator.add_listener('serial0-output-byte', function (byte) {
+        tail = (tail + String.fromCharCode(byte)).slice(-40);
+        if (tail.indexOf('GUI_READY') !== -1) markReady();
+      });
+      // Plano B caso o marcador da serial não chegue: libera a interface depois de um tempo.
+      s.timer = window.setTimeout(markReady, 240000);
+
+      ui.startButton.textContent = 'Parar';
+      ui.startButton.disabled = false;
+      ui.running = true;
+      ui.restartButton.disabled = false;
+    }).catch(function (err) {
+      if (s.dead) return;
+      ui.status('Erro: ' + (err && err.message ? err.message : err), true);
+      ui.startButton.disabled = false;
+      ui.restartButton.disabled = false;
+      ui.startButton.textContent = 'Iniciar laboratório';
+      ui.running = false;
+    });
+  }
+
   /* ---------- tela do laboratório ---------- */
 
   function renderLab(meta) {
     destroySession();
 
     var statusEl = h('p', { className: 'muted small lab-status', role: 'status', 'aria-live': 'polite' }, 'Clique em "Iniciar laboratório" para ligar o Linux.');
-    var termBox = h('div', { className: 'terminal-box', 'aria-label': 'Terminal do laboratório' });
+    var termBox = h('div', { className: 'terminal-box', 'aria-label': meta.mode === 'desktop' ? 'Desktop do laboratório' : 'Terminal do laboratório' });
     var startButton = h('button', { type: 'button', className: 'btn btn-primary' }, 'Iniciar laboratório');
     var restartButton = h('button', { type: 'button', className: 'btn btn-secondary', disabled: true }, 'Reiniciar do zero');
 
@@ -335,10 +422,10 @@
         restartButton.disabled = true;
         ui.status('Laboratório parado. Clique em "Iniciar laboratório" para ligar de novo.');
       } else {
-        startVm(meta, ui);
+        (meta.mode === 'desktop' ? startDesktop : startVm)(meta, ui);
       }
     });
-    restartButton.addEventListener('click', function () { startVm(meta, ui); });
+    restartButton.addEventListener('click', function () { (meta.mode === 'desktop' ? startDesktop : startVm)(meta, ui); });
 
     /* flag */
     var flagInput = h('input', { type: 'text', id: 'flag', className: 'flag-input', placeholder: meta.flagFormat, autocomplete: 'off', spellcheck: 'false', 'aria-describedby': 'flag-help' });
@@ -395,7 +482,7 @@
 
     var right = h('section', { className: 'pane pane-editor pane-lab', 'aria-label': 'Terminal e flag' },
       h('div', { className: 'editor-bar' },
-        h('span', { className: 'editor-title' }, 'agent@lab (Alpine Linux, ' + MEMORY_MB + ' MB)'),
+        h('span', { className: 'editor-title' }, 'agent@lab (Alpine Linux' + (meta.mode === 'desktop' ? ' com desktop, ' + GUI_MEMORY_MB : ', ' + MEMORY_MB) + ' MB)'),
         h('div', { className: 'editor-actions' }, restartButton, startButton)),
       statusEl,
       termBox,
@@ -414,7 +501,7 @@
         destroySession();
         document.title = 'Laboratório — Cyber Quiz';
         renderList();
-      } else if (!metas[id]) {
+      } else if (!metas[id] || index.indexOf(id) === -1) {
         window.location.hash = '#/';
       } else {
         document.title = metas[id].title + ' — Laboratório — Cyber Quiz';

@@ -117,3 +117,11 @@ O workflow `.github/workflows/pages.yml` valida o banco, roda os testes e public
 ## Aviso
 
 Material de estudo. Pratique as técnicas apenas em ambientes próprios ou com autorização formal.
+
+## Laboratório com desktop gráfico (experimental)
+
+O laboratório `desktop-linux` abre um Alpine Linux com **Xorg + Openbox** dentro do navegador (v86, sistema de arquivos 9p carregado sob demanda). Ele só aparece na lista se `lab/gui/manifest.json` existir.
+
+- Construção: `scripts/build_gui.sh` (precisa de Docker, rede e `zstandard`); usa `scripts/gui/Dockerfile` e as ferramentas `fs2json.py`/`copy-to-sha256.py` do v86 numa revisão fixa.
+- No CI: crie a variável de repositório `BUILD_GUI=true` (Settings → Secrets and variables → Actions → Variables). O passo é `continue-on-error`: se falhar, o site publica normalmente sem o laboratório gráfico.
+- Status: **ainda não testado de ponta a ponta**. Se o desktop não subir, verifique os logs do passo "Construir o desktop gráfico" e o console do navegador.

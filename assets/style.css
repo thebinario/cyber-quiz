@@ -323,3 +323,9 @@ details.review-item .review-body { padding: 0 14px 14px; }
 }
 
 .feedback > span { display: block; margin-top: 6px; }
+
+/* desktop gráfico (v86) */
+.screen-box { background: #000; line-height: 0; max-width: 100%; overflow: auto; }
+.screen-box .screen-text { display: none; white-space: pre; font: 14px monospace; line-height: 1.1; color: #ccc; }
+.screen-canvas { max-width: 100%; height: auto; outline: none; cursor: default; }
+.screen-canvas:focus { outline: 2px solid var(--accent, #4c8dff); }

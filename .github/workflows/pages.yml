@@ -45,6 +45,14 @@ jobs:
           node-version: "22"
       - name: Baixar emulador e imagem do laboratório (versões fixas, integridade conferida) e gerar overlays
         run: python3 scripts/build_lab.py
+      - name: Construir o desktop gráfico (opcional; falha aqui não derruba a publicação)
+        if: ${{ vars.BUILD_GUI == 'true' }}
+        continue-on-error: true
+        run: |
+          if ! bash scripts/build_gui.sh; then
+            echo "::warning::Falha ao construir o desktop gráfico; o laboratório gráfico ficará oculto."
+            rm -rf lab/gui
+          fi
       - name: Montar o site estático
         run: |
           mkdir _site

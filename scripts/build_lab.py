@@ -89,9 +89,17 @@ def overlays():
     OVERLAYS.mkdir(parents=True)
     index = json.loads((ROOT / "data" / "labs" / "index.json").read_text(encoding="utf-8"))["labs"]
     for lab_id in index:
+        meta = json.loads((ROOT / "data" / "labs" / lab_id / "lab.json").read_text(encoding="utf-8"))
+        if meta.get("mode") == "desktop":
+            # Laboratório gráfico: a flag está em scripts/gui/Dockerfile; confere o hash ali.
+            dockerfile = (ROOT / "scripts" / "gui" / "Dockerfile").read_text(encoding="utf-8")
+            flag = "FLAG{desktop_grafico_no_navegador}"
+            if flag not in dockerfile or lab_overlays.sha256(flag) != meta["flagSha256"]:
+                die("flag do laboratório gráfico não confere com scripts/gui/Dockerfile")
+            print("desktop %-21s ok (imagem construída por scripts/build_gui.sh)" % lab_id)
+            continue
         if lab_id not in lab_overlays.LABS:
             die("laboratório sem definição de overlay: " + lab_id)
-        meta = json.loads((ROOT / "data" / "labs" / lab_id / "lab.json").read_text(encoding="utf-8"))
         expected = lab_overlays.sha256(lab_overlays.LABS[lab_id]["flag"])
         if meta.get("flagSha256") != expected:
             die("flagSha256 de %s deveria ser %s" % (lab_id, expected))
