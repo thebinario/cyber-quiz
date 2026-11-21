@@ -303,3 +303,23 @@ details.review-item .review-body { padding: 0 14px 14px; }
   .split { grid-template-columns: minmax(0, 1fr); }
   .pane-editor { position: static; }
 }
+
+/* ---------- laboratório (VM no navegador) ---------- */
+
+.terminal-box {
+  background: #0b0f14; border-radius: 8px; padding: 8px; overflow: auto;
+  min-height: 120px; margin-bottom: 12px;
+}
+.terminal-box:empty { display: none; }
+.lab-status { margin: 0 0 10px; min-height: 1.4em; }
+.bad-text { color: var(--bad); }
+.pane-lab .feedback { margin-top: 12px; }
+.flag-form { margin-top: 4px; }
+.flag-form label { font-weight: 600; display: block; margin-bottom: 4px; }
+.flag-row { display: flex; gap: 8px; }
+.flag-input {
+  flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--text); font: 0.95rem var(--mono);
+}
+
+.feedback > span { display: block; margin-top: 6px; }

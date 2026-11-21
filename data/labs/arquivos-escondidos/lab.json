@@ -1,0 +1,25 @@
+{
+  "id": "arquivos-escondidos",
+  "title": "Arquivos escondidos",
+  "difficulty": "facil",
+  "category": "Linux e reconhecimento",
+  "summary": "Um backup esquecido está escondido no home do usuário. Encontre-o e decodifique.",
+  "flagSha256": "122acb1f83a3bd9acc30a4cb3bfd914c83a242d3725f220d8375257b8e9151b8",
+  "flagFormat": "FLAG{...}",
+  "statement": [
+    { "type": "p", "text": "Você recebeu acesso a um servidor de homologação como o usuário `agent`. A equipe diz que \"não há nada importante\" no diretório pessoal, mas um **backup antigo da configuração** do painel interno foi esquecido por lá. Backups costumam ficar em pastas ocultas, e muitas vezes codificados." },
+    { "type": "p", "text": "**Objetivo:** encontrar o arquivo de backup, decodificá-lo e obter a flag, no formato `FLAG{...}`." },
+    { "type": "ul", "items": [
+      "o terminal ao lado é um Linux de verdade (Alpine) rodando no seu navegador, sem acesso à internet;",
+      "comece olhando o que existe no diretório atual, **inclusive o que está oculto**;",
+      "o conteúdo do backup não está em texto puro: identifique a codificação e reverta;",
+      "cole a flag no campo abaixo do terminal para validar."
+    ] }
+  ],
+  "hints": [
+    "Arquivos e pastas que começam com `.` não aparecem em um `ls` simples. Veja a opção `-a` (`ls -la`).",
+    "`find ~ -type f` lista todos os arquivos, inclusive os de pastas ocultas. Há mais de um candidato: leia o conteúdo antes de decidir.",
+    "Texto que termina em `=` ou só tem letras, números, `+` e `/` costuma ser Base64. Tente `base64 -d arquivo`."
+  ],
+  "explanation": "Reconhecimento em Linux começa por `ls -la` e `find`: pastas ocultas (`.cache`, `.config`) são o lugar clássico de backups, históricos e credenciais esquecidas. Base64 não é criptografia, é apenas uma codificação reversível com `base64 -d`. Em testes reais, arquivos assim em diretórios pessoais costumam expor segredos."
+}

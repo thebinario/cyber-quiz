@@ -21,5 +21,7 @@ jobs:
           node-version: "22"
       - name: Validar questões
         run: python3 scripts/validate_questions.py
+      - name: Overlays do laboratório (confere as hashes das flags)
+        run: python3 scripts/build_lab.py --overlays
       - name: Testes da lógica
         run: node --test tests/core.test.js tests/challenges.test.js

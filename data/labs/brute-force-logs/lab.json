@@ -1,0 +1,25 @@
+{
+  "id": "brute-force-logs",
+  "title": "Brute force no SSH: quem entrou?",
+  "difficulty": "medio",
+  "category": "Análise de logs",
+  "summary": "Dois IPs fizeram força bruta no SSH. Descubra qual deles conseguiu entrar e com qual conta.",
+  "flagSha256": "1bd56a74dfbd301e3cf7497d777d36681d7074db6bcfb8d0c2732e9995da8195",
+  "flagFormat": "FLAG{ip_usuario}",
+  "statement": [
+    { "type": "p", "text": "Você está de plantão e o monitoramento alertou sobre um volume anormal de falhas de login no SSH. O log de autenticação do servidor está em `/var/log/auth.log`." },
+    { "type": "p", "text": "**Objetivo:** descobrir **qual IP fez muitas tentativas falhas e depois conseguiu entrar**, e **em qual conta** ele entrou. Monte a flag como `FLAG{ip_usuario}`, por exemplo `FLAG{198.51.100.9_maria}`." },
+    { "type": "ul", "items": [
+      "o IP com **mais** falhas nem sempre é o que conseguiu entrar: cruze as falhas com os logins aceitos;",
+      "nem todo `Accepted` é malicioso: há logins legítimos no log (por chave pública, de IP interno, ou de usuários que não falharam antes);",
+      "use as ferramentas do terminal: `grep`, `awk`, `sort`, `uniq -c`, `cut`;",
+      "cole a flag no campo abaixo do terminal para validar."
+    ] }
+  ],
+  "hints": [
+    "Comece contando falhas por IP: `grep 'Failed password' /var/log/auth.log | awk '{print $(NF-3)}' | sort | uniq -c | sort -rn | head`.",
+    "Depois liste só os logins aceitos: `grep Accepted /var/log/auth.log`. Compare os IPs com os da contagem de falhas.",
+    "Confirme a sequência no tempo para o IP suspeito: `grep 203.0.113 /var/log/auth.log | tail`. Troque o prefixo pelo IP que você encontrou."
+  ],
+  "explanation": "O padrão clássico de uma invasão por força bruta é uma rajada de `Failed password` seguida de um `Accepted password` do mesmo IP. Ordenar apenas por volume engana: o IP mais barulhento pode nunca ter entrado. Correlacionar falhas, sucessos e horários é o que separa ruído de incidente. As defesas são autenticação por chave, bloqueio automático (fail2ban), MFA e desativar login por senha."
+}

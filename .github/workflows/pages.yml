@@ -26,6 +26,7 @@ jobs:
         with:
           node-version: "22"
       - run: python3 scripts/validate_questions.py
+      - run: python3 scripts/build_lab.py --overlays
       - run: node --test tests/core.test.js tests/challenges.test.js
 
   deploy:
@@ -36,10 +37,18 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Baixar emulador e imagem do laboratório (versões fixas, integridade conferida) e gerar overlays
+        run: python3 scripts/build_lab.py
       - name: Montar o site estático
         run: |
           mkdir _site
-          cp -r index.html desafios.html assets data _site/
+          cp -r index.html desafios.html lab.html assets data lab _site/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

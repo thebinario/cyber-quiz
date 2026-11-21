@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; worker-src 'self' blob:; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Laboratórios de CTF com um Linux de verdade rodando no navegador via WebAssembly: enunciado de um lado, terminal do outro.">
+  <title>Laboratório — Cyber Quiz</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" href="lab/vendor/xterm.css">
+</head>
+<body>
+  <a class="skip-link" href="#app">Ir para o conteúdo</a>
+
+  <header class="site-header">
+    <div class="container container-wide header-row">
+      <a class="brand" href="./">Cyber Quiz</a>
+      <nav aria-label="Principal">
+        <a href="./">Quiz</a>
+        <a href="desafios.html">Desafios de código</a>
+        <a href="lab.html" aria-current="page">Laboratório</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="app" class="container container-wide" tabindex="-1">
+    <p class="muted" id="loading">Carregando laboratórios…</p>
+    <noscript><p class="notice">O laboratório roda um Linux no navegador (WebAssembly) e precisa de JavaScript.</p></noscript>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container container-wide">
+      <p>
+        O Linux roda <strong>inteiro no seu navegador</strong> (emulador v86 em WebAssembly), sem rede e sem enviar nada a servidores.
+        Pratique técnicas ofensivas apenas em ambientes próprios ou autorizados.
+      </p>
+      <p>
+        Componentes de terceiros: v86 (BSD-2-Clause), Alpine Linux e pacotes (várias licenças, incluindo GPL-2.0) e xterm.js (MIT).
+        Avisos e licenças em <a href="lab/vendor/notices/THIRD-PARTY-NOTICES.md">lab/vendor/notices</a>
+        · <a href="https://github.com/thebinario/cyber-quiz">Código no GitHub</a>.
+      </p>
+    </div>
+  </footer>
+
+  <script src="assets/lab.js"></script>
+</body>
+</html>

@@ -6,7 +6,7 @@ Quiz de segurança de aplicações no estilo das avaliações de habilidades do 
 
 ## O que cobre
 
-Temas da primeira versão: **IDOR**, **CSRF**, **SQL Injection** e **SSRF** (85 questões e 8 desafios de código). Cada tema pergunta:
+Temas da primeira versão: **IDOR**, **CSRF**, **SQL Injection** e **SSRF** (85 questões, 8 desafios de código e 2 laboratórios de CTF). Cada tema pergunta:
 
 - o que é a vulnerabilidade (conceito);
 - como explorar e como testar (exploração e detecção);
@@ -32,6 +32,31 @@ Como funciona, sem backend:
 - rascunhos e desafios resolvidos ficam só no `localStorage`.
 
 Cada desafio fica em `data/challenges/<id>/` com `challenge.json` (enunciado, dicas), `context.js` (dados somente leitura), `starter.js` (código vulnerável), `tests.js` e `solution.js`. O CI garante que o código inicial falha, que a solução passa em todos os testes e que uma "correção" que nega tudo é reprovada.
+
+## Laboratório de CTF (Linux no navegador)
+
+Em `lab.html` o enunciado fica de um lado e um **Linux de verdade** do outro, rodando no navegador por **WebAssembly** (emulador [v86](https://github.com/copy/v86) + Alpine Linux, com `bash`, `python3`, `grep`, `awk`, `strings`, `base64`, `xxd`, `find`, `git` e `rg`). Sem servidor e sem rede: o terminal é só da sua máquina. Você investiga no terminal, encontra a flag e cola no campo abaixo dele; a página confere o **SHA-256** da flag.
+
+| Laboratório | Dificuldade | Tema |
+|---|---|---|
+| Arquivos escondidos | Fácil | Linux e reconhecimento (`ls -la`, `find`, Base64) |
+| Brute force no SSH: quem entrou? | Médio | Análise de logs (`grep`, `awk`, `sort`, `uniq`) |
+
+Como funciona:
+
+- a imagem do Linux e o emulador **não ficam no git**: `scripts/build_lab.py` baixa do npm versões fixas (`v86@0.5.458`, `external-sandbox-v86@0.4.0`, `@xterm/xterm@5.5.0`), confere a integridade (SHA-512 do pacote e SHA-256 de cada arquivo da imagem) e gera os overlays;
+- cada laboratório é um **overlay** (um cpio pequeno, em `scripts/lab_overlays.py`) anexado ao initrd: ele traz o `/init`, que abre um shell de usuário comum, e os arquivos do desafio (por exemplo, um `auth.log` gerado de forma determinística);
+- a primeira execução baixa cerca de 35 MB (depois fica em cache) e usa cerca de 256 MB de memória;
+- as flags estão em `scripts/lab_overlays.py` (como em qualquer CTF estático, quem lê o código vê a resposta; jogue sem abrir esse arquivo).
+
+Para rodar localmente:
+
+```bash
+python3 scripts/build_lab.py        # baixa as dependências e gera os overlays (precisa de npm)
+python3 -m http.server 8000         # abra http://localhost:8000/lab.html
+```
+
+Para criar um laboratório novo: acrescente a pasta `data/labs/<id>/lab.json` (enunciado, dicas e `flagSha256`), inclua o id em `data/labs/index.json` e defina o overlay em `scripts/lab_overlays.py`. O build recusa um `flagSha256` que não corresponda à flag.
 
 ## Modos do quiz
 
