@@ -19,26 +19,11 @@
       "explanation": "Na SSRF, quem faz a requisição é o servidor, que está dentro da rede e pode alcançar destinos que o atacante não alcança direto."
     },
     {
-      "id": "ssrf-02",
-      "category": "owasp",
-      "difficulty": "medio",
-      "type": "single",
-      "question": "O que aconteceu com a SSRF no OWASP Top 10:2025?",
-      "options": [
-        "Foi incorporada à A01:2025 – Broken Access Control",
-        "Passou a ser a A05:2025 – Injection, junto de outras falhas de injeção",
-        "Continua como categoria própria, a A10:2025 – SSRF, sem mudança",
-        "Foi removida do Top 10 sem nenhuma categoria equivalente"
-      ],
-      "answer": [0],
-      "explanation": "Na edição 2025, a SSRF, que era a A10:2021, foi incorporada à Broken Access Control. A A10:2025 passou a ser Mishandling of Exceptional Conditions, uma categoria nova."
-    },
-    {
       "id": "ssrf-03",
       "category": "owasp",
       "difficulty": "facil",
       "type": "single",
-      "question": "Em qual posição do OWASP Top 10:2021 a SSRF aparecia?",
+      "question": "Em qual categoria do OWASP Top 10:2021 a SSRF é classificada?",
       "options": [
         "A01:2021 – Broken Access Control",
         "A06:2021 – Vulnerable and Outdated Components",
@@ -47,21 +32,6 @@
       ],
       "answer": [2],
       "explanation": "Em 2021 a SSRF era a A10, uma categoria própria. Na edição 2025 ela foi incorporada à A01 (Broken Access Control)."
-    },
-    {
-      "id": "ssrf-04",
-      "category": "owasp",
-      "difficulty": "medio",
-      "type": "single",
-      "question": "Qual item do OWASP API Security Top 10 (2023) trata de SSRF?",
-      "options": [
-        "API1:2023 – Broken Object Level Authorization",
-        "API3:2023 – Broken Object Property Level Authorization",
-        "API5:2023 – Broken Function Level Authorization",
-        "API7:2023 – Server Side Request Forgery"
-      ],
-      "answer": [3],
-      "explanation": "API7:2023 é a SSRF. API1 é BOLA (IDOR), API3 é BOPLA e API5 é BFLA."
     },
     {
       "id": "ssrf-05",
@@ -320,6 +290,36 @@
       ],
       "answer": [2],
       "explanation": "Mesmo sem o corpo da resposta, atrasos, erros de conexão recusada e códigos diferentes podem revelar quais endereços e portas respondem na rede interna."
+    },
+    {
+      "id": "ssrf-22",
+      "category": "conceito",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Qual é a causa-raiz de uma SSRF?",
+      "options": [
+        "O servidor aceita uma URL controlada pelo usuário e faz a requisição sem restringir o destino",
+        "O navegador do usuário envia automaticamente o cookie de sessão a um site de terceiros qualquer",
+        "A aplicação concatena a entrada do usuário em uma consulta SQL e executa o resultado no banco",
+        "A API devolve o objeto de outro usuário porque confia no identificador enviado pelo cliente"
+      ],
+      "answer": [0],
+      "explanation": "A SSRF nasce quando o servidor busca um recurso a partir de um destino que o usuário controla, sem validar para onde a requisição vai. As outras alternativas descrevem CSRF, SQL Injection e IDOR."
+    },
+    {
+      "id": "ssrf-23",
+      "category": "correcao",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Uma funcionalidade importa uma imagem a partir de uma URL informada pelo usuário. Qual desenho é o mais seguro?",
+      "options": [
+        "Bloquear no código as palavras localhost e 127.0.0.1 e aceitar qualquer outro endereço informado",
+        "Resolver o host, validar o IP contra regras de rede, conectar nesse IP, limitar redirecionamentos e isolar a rede",
+        "Pedir que o navegador baixe a imagem e valide a URL apenas no JavaScript do front-end do site",
+        "Aceitar apenas URLs com https e deixar o cliente HTTP decidir sozinho para qual endereço conectar"
+      ],
+      "answer": [1],
+      "explanation": "A defesa em camadas valida o destino já resolvido, conecta no mesmo IP validado (evita DNS rebinding), trata cada redirecionamento como nova URL e roda a busca em uma rede sem acesso ao que é interno. Blocklist simples e validação só no front-end são contornáveis, e https sozinho não restringe o destino."
     }
   ]
 }

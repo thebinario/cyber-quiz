@@ -34,21 +34,6 @@
       "explanation": "SQL Injection (CWE-89) está em A05:2025 – Injection. Na edição anterior, a mesma família era a A03:2021 – Injection."
     },
     {
-      "id": "sqli-03",
-      "category": "owasp",
-      "difficulty": "medio",
-      "type": "single",
-      "question": "E no OWASP Top 10:2021, em qual categoria a SQL Injection estava?",
-      "options": [
-        "A01:2021 – Broken Access Control",
-        "A02:2021 – Cryptographic Failures",
-        "A06:2021 – Vulnerable and Outdated Components",
-        "A03:2021 – Injection"
-      ],
-      "answer": [3],
-      "explanation": "Em 2021, a categoria Injection era a A03. Em 2025 ela passou à posição A05, mantendo o mesmo conceito."
-    },
-    {
       "id": "sqli-04",
       "category": "tipos",
       "difficulty": "medio",
