@@ -1,0 +1,325 @@
+{
+  "id": "csrf",
+  "title": "CSRF",
+  "description": "Cross-Site Request Forgery: requisições forjadas a partir do navegador de um usuário autenticado",
+  "questions": [
+    {
+      "id": "csrf-01",
+      "category": "conceito",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "O que é CSRF (Cross-Site Request Forgery)?",
+      "options": [
+        "Ataque em que o servidor da aplicação é induzido a fazer requisições a destinos internos da rede, escolhidos por quem ataca, usando a posição privilegiada dele",
+        "Ataque em que o atacante injeta um script que passa a ser executado na própria origem do site vulnerável, podendo ler a página e os tokens",
+        "Ataque que faz o navegador de um usuário autenticado enviar uma requisição indesejada a um site, aproveitando o envio automático da credencial (como o cookie)",
+        "Ataque em que o atacante adivinha ou enumera identificadores de objetos de outros usuários, trocando o valor enviado na requisição"
+      ],
+      "answer": [2],
+      "explanation": "No CSRF, o navegador da vítima é o veículo: ele envia a requisição já com o cookie de sessão. O servidor não consegue distinguir uma ação intencional de uma forjada se não houver outra verificação."
+    },
+    {
+      "id": "csrf-02",
+      "category": "conceito",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Quais condições costumam ser necessárias para um CSRF clássico funcionar? (selecione todas)",
+      "options": [
+        "Existe uma ação relevante que muda estado, como trocar o e-mail ou transferir um valor",
+        "A sessão depende de uma credencial que o navegador envia sozinho, como um cookie",
+        "Todos os parâmetros da ação são conhecidos ou previsíveis para o atacante, sem valor secreto imprevisível",
+        "O atacante precisa ler a resposta do servidor",
+        "O site vulnerável precisa ter uma falha de XSS"
+      ],
+      "answer": [0, 1, 2],
+      "explanation": "O CSRF clássico é uma ação às cegas: o atacante não precisa ler a resposta, e não depende de XSS. O que ele precisa é de uma ação previsível e de uma credencial anexada automaticamente."
+    },
+    {
+      "id": "csrf-03",
+      "category": "owasp",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Onde o CSRF é classificado no OWASP Top 10 atual (2025)?",
+      "options": [
+        "Em A05:2025 – Injection, por permitir a injeção de comandos pela requisição forjada",
+        "Em A07:2025 – Authentication Failures, por abusar da sessão autenticada do usuário",
+        "Em A08:2025 – Software or Data Integrity Failures, por alterar dados sem validação",
+        "Não tem categoria própria: o CWE-352 está mapeado em A01:2025 – Broken Access Control"
+      ],
+      "answer": [3],
+      "explanation": "O CSRF teve categoria própria em 2013 (A8:2013). Nas edições recentes ele aparece como CWE-352 dentro de Broken Access Control: A01:2021 e A01:2025."
+    },
+    {
+      "id": "csrf-04",
+      "category": "conceito",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual é a principal diferença entre CSRF e XSS?",
+      "options": [
+        "CSRF executa script dentro da origem do site vulnerável; XSS envia requisições forjadas a partir de uma origem diferente da vítima",
+        "CSRF abusa da confiança do servidor no navegador autenticado e envia ações de fora do site; XSS executa script dentro da origem do site",
+        "CSRF afeta somente servidores, que aceitam requisições sem validar; XSS afeta somente navegadores, que executam código sem validar",
+        "Não há diferença prática: os dois nomes descrevem a mesma falha, e a distinção só existe em documentos antigos sobre segurança web"
+      ],
+      "answer": [1],
+      "explanation": "No CSRF o atacante age de outra origem e não vê a resposta. No XSS o código roda na própria origem e pode ler a página, os tokens e fazer qualquer requisição como o usuário."
+    },
+    {
+      "id": "csrf-05",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Por que mudar estado usando uma requisição GET é especialmente perigoso em relação a CSRF?",
+      "options": [
+        "Porque o método GET desativa a proteção SameSite de qualquer cookie enviado pelo navegador do usuário",
+        "Porque pode ser disparado por um simples link ou imagem em outra página, sem formulário nem script",
+        "Porque requisições GET não passam por TLS e permitem que o atacante leia e altere o tráfego da vítima",
+        "Porque o GET não aceita parâmetros, então o servidor não tem como validar nenhum dado enviado"
+      ],
+      "answer": [1],
+      "explanation": "Uma tag de imagem ou um link já gera um GET com cookies. Por isso ações que alteram estado devem usar métodos como POST, PUT ou DELETE, além de proteção anti-CSRF."
+    },
+    {
+      "id": "csrf-06",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Por que APIs que autenticam com um cabeçalho Authorization definido pelo JavaScript da própria aplicação costumam estar menos expostas a CSRF clássico do que as baseadas em cookie?",
+      "options": [
+        "Porque o cabeçalho Authorization é criptografado automaticamente pelo navegador antes de ser enviado ao servidor",
+        "Porque tokens Bearer sempre expiram em poucos segundos e não podem ser reutilizados em outra requisição",
+        "Porque o navegador bloqueia todas as requisições entre sites, independentemente do tipo de credencial usada",
+        "Porque o navegador não anexa esse cabeçalho sozinho em requisições vindas de outro site, ao contrário do cookie"
+      ],
+      "answer": [3],
+      "explanation": "O cookie é enviado automaticamente. Um cabeçalho personalizado só é incluído se o JavaScript da aplicação o definir. Em contrapartida, guardar o token em armazenamento acessível ao JavaScript o deixa exposto a XSS."
+    },
+    {
+      "id": "csrf-07",
+      "category": "tipos",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Quais destas são variações reais de CSRF? (selecione todas)",
+      "options": [
+        "Login CSRF, que força a vítima a entrar na conta do atacante",
+        "CSRF baseado em requisição GET",
+        "CSRF baseado em POST, com formulário enviado automaticamente",
+        "Roubo do cookie de sessão para reutilizá-lo em outro computador"
+      ],
+      "answer": [0, 1, 2],
+      "explanation": "Roubar e reutilizar o cookie é sequestro de sessão, que é outra classe de ataque. No CSRF o atacante não obtém a credencial: ele usa o navegador da vítima para enviar a ação."
+    },
+    {
+      "id": "csrf-08",
+      "category": "exploracao",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Qual é o objetivo de um Login CSRF?",
+      "options": [
+        "Forçar a vítima a se autenticar na conta do atacante, de modo que dados que ela inserir depois fiquem associados a essa conta",
+        "Roubar a senha da vítima exibindo uma tela de login falsa que imita a página original e envia as credenciais ao atacante",
+        "Descobrir a senha de uma conta existente por tentativa e erro, testando muitas combinações no formulário de login",
+        "Derrubar o servidor de autenticação com um grande volume de requisições de login enviadas pelo navegador da vítima"
+      ],
+      "answer": [0],
+      "explanation": "Na versão de login, o atacante usa as próprias credenciais. A vítima continua navegando sem perceber e pode, por exemplo, salvar dados de pesquisa ou pagamento em uma conta que o atacante controla."
+    },
+    {
+      "id": "csrf-09",
+      "category": "correcao",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Qual é a defesa principal contra CSRF?",
+      "options": [
+        "Usar HTTPS em todo o site, o que impede que o navegador envie requisições forjadas por outra origem",
+        "Token anti-CSRF imprevisível, ligado à sessão e validado no servidor em requisições que alteram estado",
+        "Trocar POST por GET nas ações importantes, para que o navegador exiba um aviso antes de enviar a ação",
+        "Esconder o formulário sensível com CSS, de modo que páginas de outras origens não consigam enviá-lo"
+      ],
+      "answer": [1],
+      "explanation": "O token é um valor que o atacante não consegue conhecer ou prever. Sem ele, a requisição forjada de outro site é rejeitada, mesmo com o cookie correto."
+    },
+    {
+      "id": "csrf-10",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Quais medidas ajudam a prevenir CSRF? (selecione todas)",
+      "options": [
+        "Token anti-CSRF validado no servidor",
+        "Cookies com SameSite=Lax ou Strict",
+        "Verificar Origin (e Referer) ou Sec-Fetch-Site no servidor",
+        "Exigir reautenticação ou confirmação em ações sensíveis",
+        "Usar HTTPS, que impede o envio de requisições de outro site",
+        "Aceitar apenas o método POST"
+      ],
+      "answer": [0, 1, 2, 3],
+      "explanation": "As quatro primeiras são controles reais, e vale combiná-las. HTTPS protege o tráfego, mas o navegador envia a requisição forjada normalmente por HTTPS. POST sozinho não impede formulários de outro site."
+    },
+    {
+      "id": "csrf-11",
+      "category": "correcao",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Qual afirmação sobre o atributo SameSite dos cookies está correta?",
+      "options": [
+        "SameSite=None já bloqueia todo CSRF, pois instrui o navegador a nunca enviar o cookie em requisições vindas de outros sites",
+        "SameSite substitui totalmente o token anti-CSRF, em qualquer cenário, inclusive quando há subdomínios não confiáveis ou XSS",
+        "SameSite reduz o risco ao limitar o envio do cookie entre sites, mas é camada adicional: não cobre, por exemplo, ataques de subdomínios",
+        "SameSite só tem efeito em requisições GET; requisições POST, PUT e DELETE sempre enviam o cookie entre sites, mesmo com Lax"
+      ],
+      "answer": [2],
+      "explanation": "SameSite=None, ao contrário, permite o envio entre sites. Lax e Strict ajudam, mas dependem do comportamento do navegador e consideram subdomínios do mesmo domínio registrável como o mesmo site."
+    },
+    {
+      "id": "csrf-12",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "O que é o padrão double submit cookie?",
+      "options": [
+        "Enviar o cookie de sessão duas vezes na mesma requisição, para garantir que ele chegou intacto e sem alterações ao servidor",
+        "Guardar dois cookies de sessão diferentes para o mesmo usuário, um usado só em leituras e outro só em operações de escrita",
+        "O servidor definir um valor aleatório em um cookie e exigir o mesmo valor no corpo ou em um cabeçalho da requisição, comparando os dois",
+        "Pedir a senha do usuário duas vezes antes de cada ação sensível e comparar as duas digitações antes de executá-la"
+      ],
+      "answer": [2],
+      "explanation": "Um site de outro domínio normalmente não consegue ler o cookie do domínio alvo, então não consegue repetir o valor no corpo. É uma variação sem estado do token e funciona melhor quando o valor é assinado ou ligado à sessão, pois um subdomínio comprometido pode conseguir definir cookies para o domínio pai."
+    },
+    {
+      "id": "csrf-13",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual característica um token anti-CSRF bem projetado deve ter?",
+      "options": [
+        "Ser o mesmo para todos os usuários e válido por tempo indeterminado, para facilitar o uso de cache",
+        "Ser gerado a partir do horário atual em segundos, para que o servidor consiga recalculá-lo sem armazenar nada",
+        "Ser enviado somente na query string da URL, para que fique visível e possa ser conferido nos logs",
+        "Ser imprevisível, ligado à sessão (ou assinado) e verificado no servidor em toda requisição que altera estado"
+      ],
+      "answer": [3],
+      "explanation": "Tokens previsíveis ou compartilhados podem ser reproduzidos pelo atacante. Na URL, o token vaza por logs, histórico e cabeçalho Referer."
+    },
+    {
+      "id": "csrf-14",
+      "category": "deteccao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Como testar se uma ação é protegida contra CSRF em um pentest autorizado?",
+      "options": [
+        "Verificar se o certificado TLS do site é válido e se o servidor aceita apenas conexões criptografadas",
+        "Reenviar a requisição sem o token, ou com o token de outra sessão, e verificar se a ação ainda é executada",
+        "Medir o tempo de resposta do servidor com e sem o cookie de sessão e comparar a diferença entre eles",
+        "Trocar o método HTTP da requisição por TRACE e verificar se o servidor devolve o conteúdo recebido"
+      ],
+      "answer": [1],
+      "explanation": "Se a ação funciona sem token ou com o token de outro usuário, a validação não existe ou é fraca. Confirme também o comportamento ao remover só o valor, ao alterar o método e ao mudar o Origin."
+    },
+    {
+      "id": "csrf-15",
+      "category": "deteccao",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Uma API só espera JSON, mas não verifica o cabeçalho Content-Type. Por que isso pode permitir CSRF?",
+      "options": [
+        "Porque um formulário de outro site consegue enviar um corpo JSON com Content-Type text/plain, sem disparar o preflight do CORS",
+        "Porque JSON é um formato sem criptografia, então qualquer site consegue ler o corpo da requisição enviada pela rede",
+        "Porque o navegador reenvia o corpo JSON a todos os subdomínios do site, sem aplicar a política de mesma origem",
+        "Porque formulários podem enviar qualquer Content-Type, inclusive application/json, sem nenhuma restrição do navegador"
+      ],
+      "answer": [0],
+      "explanation": "Formulários HTML só enviam três tipos de conteúdo sem preflight: urlencoded, multipart e text/plain. Se o servidor aceitar JSON vindo em text/plain, a requisição forjada passa. Exigir application/json de fato (e rejeitar o resto) ajuda, mas não substitui token ou checagem de origem."
+    },
+    {
+      "id": "csrf-16",
+      "category": "conceito",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "O CORS impede ataques de CSRF?",
+      "options": [
+        "Sim, porque o CORS faz o navegador bloquear o envio de qualquer requisição feita a partir de outra origem para o servidor",
+        "Sim, porque o navegador consulta o servidor com uma verificação prévia (preflight) antes de enviar toda e qualquer requisição",
+        "Não: o CORS controla se scripts de outra origem podem ler a resposta; requisições simples ainda são enviadas e a ação é executada",
+        "Não, porque o CORS só se aplica a conexões HTTP sem criptografia e deixa de valer quando o site usa HTTPS em todas as rotas"
+      ],
+      "answer": [2],
+      "explanation": "O CORS é uma política de leitura de respostas. A verificação prévia (preflight) só acontece em requisições não simples. Um POST de formulário cross-site é enviado e processado pelo servidor."
+    },
+    {
+      "id": "csrf-17",
+      "category": "conceito",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Por que uma falha de XSS no mesmo site costuma invalidar a proteção por token anti-CSRF?",
+      "options": [
+        "Porque o XSS desativa o TLS da conexão e permite que o atacante leia o token enquanto ele trafega pela rede da vítima",
+        "Porque o script injetado roda na origem do site, consegue ler o token da página e enviar requisições válidas como o usuário",
+        "Porque o token anti-CSRF só protege requisições GET, e o script injetado passa a enviar apenas requisições do tipo POST",
+        "Porque o XSS apaga os cookies de sessão do usuário, e sem cookie o servidor deixa de verificar o token de proteção"
+      ],
+      "answer": [1],
+      "explanation": "O token protege contra requisições vindas de fora da origem. Um script dentro da origem lê a página e o token e faz a requisição normalmente, por isso corrigir o XSS é pré-requisito."
+    },
+    {
+      "id": "csrf-18",
+      "category": "deteccao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "A ação \"alterar e-mail da conta\" é um POST autenticado só por cookie com SameSite=None; Secure, sem token e sem checagem de Origin. Qual é a conclusão mais provável?",
+      "options": [
+        "A ação não é vulnerável, porque o cookie tem o atributo Secure, que impede o envio entre sites",
+        "A ação é vulnerável a SQL Injection, porque o e-mail novo é enviado em um corpo de requisição POST",
+        "A ação é provavelmente vulnerável a CSRF; confirme com uma prova de conceito no ambiente autorizado",
+        "A ação é segura, porque usa o método POST, que os navegadores nunca enviam entre sites diferentes"
+      ],
+      "answer": [2],
+      "explanation": "Secure só garante o envio por HTTPS. Com SameSite=None o cookie acompanha requisições entre sites, e sem token ou checagem de origem nada diferencia a ação legítima da forjada."
+    },
+    {
+      "id": "csrf-19",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual afirmação sobre usar apenas Origin/Referer como defesa de CSRF é mais correta?",
+      "options": [
+        "Pode ser camada adicional, mas o Referer pode estar ausente; é preciso definir a política para esse caso, e o token é preferível",
+        "É suficiente por si só e dispensa token, SameSite e qualquer outra defesa, em todos os cenários, navegadores e versões",
+        "Não funciona nunca, porque os navegadores modernos não enviam os cabeçalhos Origin nem Referer em requisições de formulários",
+        "Só funciona em requisições GET, pois as requisições POST não carregam nenhuma informação sobre a origem do pedido enviado"
+      ],
+      "answer": [0],
+      "explanation": "O Origin costuma ser enviado em requisições POST entre origens, mas o Referer pode ser omitido por políticas de privacidade ou de navegador. Como camada extra é útil, e a verificação deve rejeitar origens inesperadas e decidir de forma explícita o que fazer quando o cabeçalho não vem."
+    },
+    {
+      "id": "csrf-20",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Quais requisições devem ser protegidas contra CSRF?",
+      "options": [
+        "Somente a página de login, porque é a única rota em que o usuário envia credenciais e que cria uma nova sessão autenticada",
+        "Apenas requisições GET de leitura, porque são as únicas que o navegador envia com cookies sem interação da vítima",
+        "Somente páginas estáticas, porque são as únicas que podem ser incorporadas em outros sites, dentro de quadros, por um atacante",
+        "Qualquer requisição que altere estado e use credencial enviada automaticamente, como alterar e-mail, senha ou transferir valor"
+      ],
+      "answer": [3],
+      "explanation": "O critério é o efeito (muda estado?) e o tipo de credencial (anexada pelo navegador?). Páginas estáticas e leituras sem efeito colateral não precisam do token."
+    },
+    {
+      "id": "csrf-21",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Em um laboratório, qual é a estrutura típica de uma prova de conceito de CSRF por POST?",
+      "options": [
+        "Uma página sob controle de quem testa, com um formulário que aponta para a ação do site-alvo e é enviado enquanto a vítima de teste está autenticada",
+        "Um script que testa várias senhas no formulário de login do site-alvo, até encontrar uma combinação que a aplicação aceite como válida",
+        "Uma consulta SQL com uma condição adicional, enviada diretamente ao banco de dados do site-alvo a partir de um terminal de linha de comando",
+        "Uma requisição feita pelo próprio servidor do site-alvo a um endereço da rede interna escolhido por quem testa, cuja resposta é devolvida na página"
+      ],
+      "answer": [0],
+      "explanation": "A prova de conceito mostra que uma página de outra origem consegue disparar a ação. Use contas e ambiente de teste autorizados."
+    }
+  ]
+}

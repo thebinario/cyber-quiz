@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Quiz de AppSec e Pentest com questões sorteadas sobre IDOR, CSRF, SQL Injection e SSRF, no estilo de perguntas de entrevista técnica.">
+  <title>Cyber Quiz — questões de AppSec e Pentest</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#app">Ir para o conteúdo</a>
+
+  <header class="site-header">
+    <div class="container">
+      <a class="brand" href="./">Cyber Quiz</a>
+      <span class="tagline">AppSec e Pentest · perguntas de entrevista</span>
+    </div>
+  </header>
+
+  <main id="app" class="container" tabindex="-1">
+    <p class="muted" id="loading">Carregando questões…</p>
+    <noscript><p class="notice">Este quiz precisa de JavaScript para sortear e corrigir as questões.</p></noscript>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        Material de estudo. As categorias OWASP citam a edição entre parênteses: Top 10:2021 e Top 10:2025.
+        As técnicas descritas devem ser praticadas apenas em ambientes próprios ou formalmente autorizados.
+      </p>
+      <p>
+        <a href="https://github.com/thebinario/cyber-quiz">Código e banco de questões no GitHub</a>
+        · o resultado fica apenas no seu navegador.
+      </p>
+    </div>
+  </footer>
+
+  <script src="assets/quiz-core.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

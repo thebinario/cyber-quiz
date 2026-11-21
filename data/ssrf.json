@@ -1,0 +1,325 @@
+{
+  "id": "ssrf",
+  "title": "SSRF",
+  "description": "Server-Side Request Forgery: o servidor é induzido a fazer requisições a destinos escolhidos pelo atacante",
+  "questions": [
+    {
+      "id": "ssrf-01",
+      "category": "conceito",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "O que é SSRF (Server-Side Request Forgery)?",
+      "options": [
+        "Falha em que o navegador de um usuário autenticado envia, sem que ele perceba, ações indesejadas usando o cookie de sessão dele",
+        "Falha em que o atacante consegue induzir o servidor da aplicação a fazer requisições a destinos que ele escolhe, internos ou externos",
+        "Falha em que a aplicação mostra dados privados de outro usuário quando o identificador do objeto é trocado na requisição",
+        "Falha em que a entrada fornecida pelo usuário é executada como parte de uma consulta SQL enviada ao banco de dados"
+      ],
+      "answer": [1],
+      "explanation": "Na SSRF, quem faz a requisição é o servidor, que está dentro da rede e pode alcançar destinos que o atacante não alcança direto."
+    },
+    {
+      "id": "ssrf-02",
+      "category": "owasp",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "O que aconteceu com a SSRF no OWASP Top 10:2025?",
+      "options": [
+        "Foi incorporada à A01:2025 – Broken Access Control",
+        "Passou a ser a A05:2025 – Injection, junto de outras falhas de injeção",
+        "Continua como categoria própria, a A10:2025 – SSRF, sem mudança",
+        "Foi removida do Top 10 sem nenhuma categoria equivalente"
+      ],
+      "answer": [0],
+      "explanation": "Na edição 2025, a SSRF, que era a A10:2021, foi incorporada à Broken Access Control. A A10:2025 passou a ser Mishandling of Exceptional Conditions, uma categoria nova."
+    },
+    {
+      "id": "ssrf-03",
+      "category": "owasp",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Em qual posição do OWASP Top 10:2021 a SSRF aparecia?",
+      "options": [
+        "A01:2021 – Broken Access Control",
+        "A06:2021 – Vulnerable and Outdated Components",
+        "A10:2021 – Server-Side Request Forgery",
+        "A05:2021 – Security Misconfiguration"
+      ],
+      "answer": [2],
+      "explanation": "Em 2021 a SSRF era a A10, uma categoria própria. Na edição 2025 ela foi incorporada à A01 (Broken Access Control)."
+    },
+    {
+      "id": "ssrf-04",
+      "category": "owasp",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual item do OWASP API Security Top 10 (2023) trata de SSRF?",
+      "options": [
+        "API1:2023 – Broken Object Level Authorization",
+        "API3:2023 – Broken Object Property Level Authorization",
+        "API5:2023 – Broken Function Level Authorization",
+        "API7:2023 – Server Side Request Forgery"
+      ],
+      "answer": [3],
+      "explanation": "API7:2023 é a SSRF. API1 é BOLA (IDOR), API3 é BOPLA e API5 é BFLA."
+    },
+    {
+      "id": "ssrf-05",
+      "category": "exploracao",
+      "difficulty": "facil",
+      "type": "multi",
+      "question": "Quais funcionalidades costumam ser pontos de entrada para SSRF? (selecione todas)",
+      "options": [
+        "Pré-visualização de links",
+        "Importação de arquivo ou imagem por URL",
+        "Webhooks configuráveis pelo usuário",
+        "Geração de PDF ou imagem a partir de uma URL ou HTML",
+        "Campos de senha com indicador de força"
+      ],
+      "answer": [0, 1, 2, 3],
+      "explanation": "Qualquer recurso em que o servidor busca algo a partir de um endereço informado pelo usuário é candidato. Um indicador de força de senha roda no cliente e não envolve requisições do servidor."
+    },
+    {
+      "id": "ssrf-06",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Por que o endereço 169.254.169.254 é um alvo clássico em SSRF contra ambientes de nuvem?",
+      "options": [
+        "É o endereço do servidor DNS público da nuvem, usado pelas instâncias para resolver nomes de domínio da rede",
+        "É o endereço do servidor de e-mail padrão da nuvem, que envia as notificações automáticas da conta do cliente",
+        "É o serviço de metadados da instância, que pode expor informações e credenciais temporárias do papel associado",
+        "É o endereço de saída por onde passa todo o tráfego da aplicação em direção à internet pública, sem filtros"
+      ],
+      "answer": [2],
+      "explanation": "Esse endereço link-local só é acessível de dentro da instância. Se a aplicação faz a requisição por ordem do atacante, ele pode ler os metadados, e a gravidade depende das permissões do papel anexado."
+    },
+    {
+      "id": "ssrf-07",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Em um teste autorizado, o parâmetro url recebe o endereço http://127.0.0.1:8080/admin e a aplicação devolve um painel administrativo interno. Qual é a conclusão?",
+      "options": [
+        "É esperado: 127.0.0.1 é o computador do usuário, então o painel exibido é o dele mesmo",
+        "SSRF confirmada, com acesso a um serviço que não deveria ser alcançável pelo usuário",
+        "É CSRF, porque a requisição de administração foi forjada a partir de outra origem",
+        "É XSS refletido, porque o conteúdo informado no parâmetro foi exibido de volta na página"
+      ],
+      "answer": [1],
+      "explanation": "No contexto da requisição feita pelo servidor, 127.0.0.1 é o próprio servidor, não o computador do usuário. Painéis internos costumam confiar em quem vem de dentro, e por isso a SSRF é grave."
+    },
+    {
+      "id": "ssrf-08",
+      "category": "tipos",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual é a diferença entre SSRF básica e SSRF cega (blind)?",
+      "options": [
+        "Na básica o servidor devolve o conteúdo da resposta ao atacante; na cega nada é devolvido e o efeito é inferido por tempo, erros ou canal externo",
+        "A básica só funciona com URLs que usam o protocolo HTTP; a cega só funciona com URLs que usam o protocolo HTTPS, com TLS",
+        "A básica não exige autenticação de nenhum tipo para ser explorada; a cega só pode ser explorada por usuários com perfil de administrador",
+        "Não há diferença: os dois nomes descrevem exatamente a mesma falha, e só variam conforme o tamanho e a arquitetura da aplicação"
+      ],
+      "answer": [0],
+      "explanation": "A SSRF cega ainda é perigosa: pode mapear a rede interna, atingir serviços internos e disparar ações, mesmo sem mostrar a resposta."
+    },
+    {
+      "id": "ssrf-09",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Por que uma lista de bloqueio (blocklist) contendo apenas \"localhost\" e \"127.0.0.1\" é insuficiente?",
+      "options": [
+        "Porque existem representações alternativas do mesmo destino (decimal, hexadecimal, IPv6, DNS apontando para IP interno) e redirecionamentos",
+        "Porque o endereço de loopback é tratado de forma especial pelo sistema operacional e não pode ser bloqueado por regras da aplicação",
+        "Porque listas de bloqueio só funcionam no código do front-end e são ignoradas quando a requisição já chegou ao servidor da aplicação",
+        "Porque o servidor deixa de aplicar qualquer lista de bloqueio configurada quando a conexão de saída da aplicação usa HTTPS e TLS"
+      ],
+      "answer": [0],
+      "explanation": "Há muitas formas de apontar para o mesmo destino. A abordagem robusta é a lista de permissão (allowlist) e a validação do IP final depois da resolução de DNS."
+    },
+    {
+      "id": "ssrf-10",
+      "category": "tipos",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "O que é um ataque de DNS rebinding no contexto de SSRF?",
+      "options": [
+        "O atacante troca o domínio do site da vítima por um domínio de aparência parecida, registrado por ele",
+        "O atacante descobre o endereço IP real do servidor protegido consultando registros DNS públicos do domínio",
+        "O atacante desativa o serviço de DNS do servidor para derrubar a aplicação por negação de serviço",
+        "O domínio resolve primeiro para um IP permitido (passando na validação) e, na hora da conexão, para um IP interno"
+      ],
+      "answer": [3],
+      "explanation": "É um problema de tempo entre a verificação e o uso (TOCTOU). A defesa é resolver o nome uma vez, validar o IP e conectar a esse mesmo IP."
+    },
+    {
+      "id": "ssrf-11",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Por que é importante restringir os esquemas de URL aceitos (por exemplo, apenas http e https)?",
+      "options": [
+        "Porque outros esquemas, como file:// ou gopher://, podem permitir, conforme a biblioteca, ler arquivos locais ou acessar serviços internos",
+        "Porque HTTP e HTTPS são os únicos esquemas que existem, e qualquer outro apenas gera um erro inofensivo na biblioteca de rede",
+        "Porque esquemas diferentes quebram o cache do navegador e deixam a aplicação mais lenta para todos os usuários conectados à mesma rede",
+        "Porque esquemas diferentes só funcionam em redes públicas e, por isso, nunca conseguem alcançar serviços da rede interna da empresa"
+      ],
+      "answer": [0],
+      "explanation": "Muitas bibliotecas de URL suportam esquemas além de HTTP. Limitar os esquemas a uma lista mínima reduz a superfície e impede usos inesperados."
+    },
+    {
+      "id": "ssrf-12",
+      "category": "exploracao",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Como um open redirect em um domínio permitido pode ajudar a contornar uma allowlist de SSRF?",
+      "options": [
+        "Não ajuda, porque os clientes HTTP usados pelos servidores nunca seguem redirecionamentos automaticamente, em nenhuma biblioteca",
+        "A allowlist valida só a URL inicial; o domínio permitido redireciona para um destino interno e o cliente HTTP segue o redirecionamento",
+        "O redirecionamento criptografa a requisição de saída e esconde o destino final dos registros de auditoria e de qualquer filtro de rede",
+        "O redirecionamento troca o método HTTP da requisição para POST e, com isso, desativa todas as verificações da lista de permissão"
+      ],
+      "answer": [1],
+      "explanation": "Se o cliente HTTP segue redirecionamentos automaticamente, o destino final pode ser outro. A defesa é desativar ou limitar os redirecionamentos e validar cada salto."
+    },
+    {
+      "id": "ssrf-13",
+      "category": "correcao",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Qual é a defesa principal contra SSRF?",
+      "options": [
+        "Remover a palavra localhost e o endereço 127.0.0.1 do parâmetro recebido antes de fazer a requisição de saída",
+        "Pedir ao usuário que informe somente URLs que comecem com https, recusando as que usem apenas http no endereço",
+        "Validar a URL no JavaScript do front-end antes de enviá-la ao servidor, bloqueando endereços internos conhecidos",
+        "Uma lista de permissão (allowlist) de destinos aceitos, validada no servidor, recusando tudo que não estiver nela"
+      ],
+      "answer": [3],
+      "explanation": "Quando só existem alguns destinos legítimos, liste-os explicitamente. Validações no cliente podem ser ignoradas por quem monta a requisição à mão."
+    },
+    {
+      "id": "ssrf-14",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Quais medidas ajudam a prevenir ou reduzir o impacto de SSRF? (selecione todas)",
+      "options": [
+        "Allowlist de destinos e de esquemas",
+        "Resolver o DNS e bloquear IPs privados, de loopback e link-local antes de conectar",
+        "Desativar ou limitar o seguimento de redirecionamentos",
+        "Segmentação de rede e filtragem de saída (egress) para o serviço que faz as requisições",
+        "Validar a URL somente com uma expressão regular que procura a palavra localhost",
+        "Responder sempre 200 para esconder os erros"
+      ],
+      "answer": [0, 1, 2, 3],
+      "explanation": "As quatro primeiras são controles complementares. Uma regex que busca uma palavra é facilmente contornada, e esconder erros apenas dificulta o diagnóstico sem corrigir a falha."
+    },
+    {
+      "id": "ssrf-15",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual recurso da AWS dificulta o roubo de credenciais por SSRF contra o serviço de metadados?",
+      "options": [
+        "IMDSv2, que exige um token de sessão obtido por uma requisição PUT e enviado em um cabeçalho",
+        "Desativar o IPv6 na instância, pois o serviço de metadados só responde a conexões feitas por IPv6",
+        "Usar HTTP em vez de HTTPS nas chamadas de saída, o que impede a leitura dos metadados da instância",
+        "Mudar o nome da instância para um valor aleatório, de modo que o serviço de metadados não a encontre"
+      ],
+      "answer": [0],
+      "explanation": "Muitas SSRFs só conseguem fazer um GET simples, sem controlar método e cabeçalhos. O IMDSv2 exige um fluxo que essas falhas costumam não conseguir reproduzir, mas não substitui corrigir a SSRF."
+    },
+    {
+      "id": "ssrf-16",
+      "category": "correcao",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Qual abordagem evita o problema de verificar um IP e depois conectar a outro (DNS rebinding)?",
+      "options": [
+        "Validar o hostname antes e resolver o DNS de novo na hora de conectar",
+        "Confiar no cache de DNS do navegador do usuário para decidir se o destino é permitido",
+        "Resolver o nome uma vez, validar o IP obtido e conectar usando esse mesmo IP",
+        "Validar somente o esquema da URL e deixar o nome do host para o cliente HTTP resolver"
+      ],
+      "answer": [2],
+      "explanation": "Fixar (pin) o IP validado elimina a janela entre a verificação e o uso. Validar apenas o texto da URL deixa a resolução para depois."
+    },
+    {
+      "id": "ssrf-17",
+      "category": "deteccao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Como detectar uma SSRF cega durante um teste autorizado?",
+      "options": [
+        "Procurar mensagens de erro de SQL na resposta da aplicação e comparar o conteúdo devolvido com e sem o parâmetro enviado",
+        "Apontar a URL para um servidor seu, como um serviço de callback (Burp Collaborator), e ver se chega uma requisição DNS ou HTTP",
+        "Verificar o certificado TLS da aplicação e conferir se o servidor aceita apenas versões modernas do protocolo de criptografia",
+        "Medir o tempo de carregamento da página inicial e compará-lo com o de outras páginas do mesmo site, em horários diferentes"
+      ],
+      "answer": [1],
+      "explanation": "Se a requisição chega ao seu servidor de callback, o servidor da aplicação fez a conexão que você pediu. É a prova principal de SSRF cega."
+    },
+    {
+      "id": "ssrf-18",
+      "category": "conceito",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Qual é a diferença básica entre SSRF e CSRF quanto a quem envia a requisição?",
+      "options": [
+        "Não há diferença: os dois nomes descrevem o mesmo ataque, visto de lados diferentes",
+        "Em ambos é o navegador da vítima que envia a requisição, mudando apenas o destino dela",
+        "No CSRF é o navegador da vítima que envia a requisição; na SSRF é o servidor da aplicação",
+        "Em ambos é o servidor da aplicação que envia a requisição, mudando apenas a origem dela"
+      ],
+      "answer": [2],
+      "explanation": "CSRF abusa do navegador autenticado do usuário. SSRF abusa do servidor, que é induzido a fazer requisições com a posição de rede e as credenciais que ele possui."
+    },
+    {
+      "id": "ssrf-19",
+      "category": "conceito",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Por que a SSRF é especialmente perigosa em arquiteturas de nuvem e microsserviços?",
+      "options": [
+        "Porque o servidor da aplicação fica dentro da rede confiável e pode alcançar serviços internos e metadados que não estão expostos à internet",
+        "Porque os provedores de nuvem não suportam conexões HTTPS, e todo o tráfego entre os microsserviços trafega sem nenhuma criptografia",
+        "Porque microsserviços se comunicam apenas por memória compartilhada, então não existe nenhuma fronteira de confiança a proteger",
+        "Porque toda requisição feita dentro da nuvem é pública e pode ser lida por qualquer outro cliente do provedor"
+      ],
+      "answer": [0],
+      "explanation": "Serviços internos costumam confiar em quem está dentro da rede. A SSRF faz o atacante herdar essa posição privilegiada do servidor."
+    },
+    {
+      "id": "ssrf-20",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Não devolver ao usuário o corpo bruto da resposta obtida pelo servidor elimina a SSRF?",
+      "options": [
+        "Sim, porque sem o corpo da resposta o atacante não consegue mais fazer o servidor enviar a requisição",
+        "Sim, desde que a aplicação use HTTPS em todas as conexões de saída feitas pelo servidor",
+        "Não: a requisição interna ainda pode ser disparada e a falha continua existindo, agora como SSRF cega",
+        "Não: o corpo da resposta nunca é um problema, e esconder o corpo não reduz nenhum risco"
+      ],
+      "answer": [2],
+      "explanation": "Evitar devolver a resposta reduz o vazamento direto de dados, mas a requisição continua acontecendo e ainda pode causar efeito em serviços internos."
+    },
+    {
+      "id": "ssrf-21",
+      "category": "deteccao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Em uma SSRF em que a resposta não é exibida, como o atacante pode mapear serviços internos?",
+      "options": [
+        "Lendo o código-fonte do servidor da aplicação, que costuma ficar disponível publicamente no repositório",
+        "Alterando o registro DNS público da empresa para que ele aponte para um servidor controlado pelo atacante",
+        "Observando diferenças de tempo de resposta ou de mensagem de erro entre portas abertas e fechadas",
+        "Trocando o cookie de sessão por outro, até que o servidor revele o conteúdo da rede interna"
+      ],
+      "answer": [2],
+      "explanation": "Mesmo sem o corpo da resposta, atrasos, erros de conexão recusada e códigos diferentes podem revelar quais endereços e portas respondem na rede interna."
+    }
+  ]
+}

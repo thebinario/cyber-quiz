@@ -1,0 +1,341 @@
+{
+  "id": "idor",
+  "title": "IDOR / BOLA",
+  "description": "Referência direta insegura a objeto e autorização quebrada em nível de objeto",
+  "questions": [
+    {
+      "id": "idor-01",
+      "category": "conceito",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "O que é um IDOR (em APIs, também chamado de BOLA)?",
+      "options": [
+        "Falha de autenticação em que o sistema aceita senhas fracas, padrão ou reutilizadas por usuários de várias contas",
+        "Falha de autorização em que o servidor aceita a referência a um objeto sem conferir se o usuário autenticado pode acessá-lo",
+        "Falha de injeção em que dados enviados pelo usuário são interpretados como parte de uma consulta executada no banco de dados",
+        "Falha de script entre sites em que código injetado em uma página é executado no navegador de outra pessoa que a visita"
+      ],
+      "answer": [1],
+      "explanation": "IDOR/BOLA é uma falha de autorização por objeto. O servidor sabe quem é o usuário (autenticação), mas não verifica se ele pode agir sobre aquele objeto específico (pedido, fatura, arquivo etc.)."
+    },
+    {
+      "id": "idor-02",
+      "category": "owasp",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Em qual categoria do OWASP Top 10:2021 o IDOR é classificado?",
+      "options": [
+        "A03:2021 – Injection",
+        "A04:2021 – Insecure Design",
+        "A01:2021 – Broken Access Control",
+        "A07:2021 – Identification and Authentication Failures"
+      ],
+      "answer": [2],
+      "explanation": "A própria descrição da A01:2021 cita o acesso a contas ou objetos de outra pessoa por meio de seu identificador (insecure direct object references). Na edição 2025 a categoria segue como A01:2025 – Broken Access Control, com o CWE-639 mapeado nela."
+    },
+    {
+      "id": "idor-03",
+      "category": "owasp",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "No OWASP API Security Top 10 (2023), qual item corresponde ao IDOR?",
+      "options": [
+        "API1:2023 – Broken Object Level Authorization (BOLA)",
+        "API2:2023 – Broken Authentication",
+        "API3:2023 – Broken Object Property Level Authorization",
+        "API5:2023 – Broken Function Level Authorization"
+      ],
+      "answer": [0],
+      "explanation": "BOLA é o item API1:2023. BOPLA (API3) trata de campos dentro de um objeto, e BFLA (API5) trata de funções, não de objetos específicos."
+    },
+    {
+      "id": "idor-04",
+      "category": "conceito",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Sobre identificadores e IDOR, qual afirmação é correta?",
+      "options": [
+        "UUIDs eliminam o IDOR por completo, pois ninguém consegue adivinhar um identificador aleatório e longo",
+        "A simples existência de IDs sequenciais na URL já é, por si só, uma vulnerabilidade de IDOR, mesmo que o servidor verifique a permissão",
+        "IDOR só ocorre quando o identificador do objeto é um número inteiro; identificadores textuais não são afetados",
+        "IDs imprevisíveis dificultam adivinhar a referência, mas não substituem a checagem de autorização no servidor"
+      ],
+      "answer": [3],
+      "explanation": "A falha é a ausência de autorização por objeto, não a previsibilidade do ID. UUIDs vazam em listagens, e-mails e links, e quem os obtém continua passando se o servidor não verificar permissão."
+    },
+    {
+      "id": "idor-05",
+      "category": "exploracao",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Ana, autenticada, troca 501 por 601 na rota GET /api/orders/501, mantém a própria sessão e recebe o pedido privado de Bruno. O que esse comportamento indica?",
+      "options": [
+        "IDOR/BOLA, com leitura indevida de um objeto de outro usuário",
+        "CSRF, porque a requisição foi forjada a partir de outro site",
+        "SQL Injection, porque o valor enviado na rota foi alterado",
+        "SSRF, porque o servidor passou a buscar um recurso diferente"
+      ],
+      "answer": [0],
+      "explanation": "A identidade (Ana) foi mantida e só a referência do objeto mudou. Receber os dados de outro usuário sem permissão é a assinatura do IDOR de leitura."
+    },
+    {
+      "id": "idor-06",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual é a estratégia básica para testar IDOR com duas contas?",
+      "options": [
+        "Enviar aspas e operadores SQL em todos os parâmetros da requisição e observar as mensagens de erro devolvidas pelo banco",
+        "Repetir a mesma requisição milhares de vezes em sequência para tentar esgotar os recursos do serviço e provocar falhas",
+        "Registrar o comportamento legítimo da conta A, trocar apenas a referência do objeto pela de B mantendo a sessão de A e comparar o resultado",
+        "Trocar o cookie de sessão por valores aleatórios até que a aplicação aceite algum deles como se fosse de outro usuário"
+      ],
+      "answer": [2],
+      "explanation": "É o método A → B: baseline de A, baseline de B, troca somente da referência com a sessão de A, comparação e contraprova. Mudar uma variável por vez deixa claro o que causou o resultado."
+    },
+    {
+      "id": "idor-07",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Em quais locais uma referência a objeto pode ser manipulada em um teste de IDOR? (selecione todas)",
+      "options": [
+        "No caminho da URL, como /api/orders/601",
+        "Na query string, como ?ticketId=77",
+        "No corpo JSON ou de formulário, como um campo userId",
+        "Em cabeçalho ou cookie controlado pelo cliente, como X-Account-Id",
+        "Apenas no certificado TLS do servidor"
+      ],
+      "answer": [0, 1, 2, 3],
+      "explanation": "A referência pode estar em qualquer parte da requisição: caminho, query, corpo, cabeçalhos, cookies, variáveis GraphQL ou listas de IDs. O certificado TLS não é enviado pelo cliente como referência a objeto."
+    },
+    {
+      "id": "idor-08",
+      "category": "tipos",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual alternativa descreve corretamente IDOR horizontal e vertical?",
+      "options": [
+        "Horizontal alcança objetos e funções de privilégio maior, como os de um administrador; vertical alcança objetos de outro usuário com o mesmo nível",
+        "Horizontal afeta apenas operações de leitura em APIs públicas; vertical afeta apenas operações de escrita e exclusão em áreas internas",
+        "Horizontal acessa objetos de outro usuário com o mesmo nível de privilégio; vertical alcança objetos ou funções de privilégio maior, como os de um administrador",
+        "Horizontal ocorre apenas em APIs REST com identificadores numéricos; vertical ocorre apenas em APIs GraphQL com identificadores textuais"
+      ],
+      "answer": [2],
+      "explanation": "Horizontal é o caso clássico (usuário comum vendo dados de outro usuário comum). Vertical aparece quando a troca de referência leva a recursos ou contas de maior privilégio."
+    },
+    {
+      "id": "idor-09",
+      "category": "tipos",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Quais impactos um IDOR pode ter? (selecione todas)",
+      "options": [
+        "Leitura de dados de outro usuário",
+        "Alteração de dados de outro usuário",
+        "Exclusão de recursos de outro usuário",
+        "Execução automática de JavaScript no navegador da vítima, como consequência direta",
+        "Execução de ações em nome de outro usuário, como cancelar um pedido"
+      ],
+      "answer": [0, 1, 2, 4],
+      "explanation": "IDOR afeta confidencialidade (ler), integridade (alterar) e disponibilidade (excluir), além de ações em nome de terceiros. Executar script no navegador da vítima é característica do XSS, não consequência direta do IDOR."
+    },
+    {
+      "id": "idor-10",
+      "category": "tipos",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Em POST /api/invoices/export com a lista de IDs [9001, 9002], qual comportamento caracteriza a falha de IDOR em operações em lote?",
+      "options": [
+        "O servidor rejeita a operação inteira quando algum dos IDs da lista não pertence ao usuário que fez a requisição",
+        "O servidor valida só a permissão geral para exportar e processa todos os IDs da lista sem conferir cada item",
+        "O servidor processa somente os IDs que o usuário pode acessar e não devolve nenhum dado dos demais itens da lista",
+        "O servidor limita a lista a, no máximo, cem IDs por requisição, mas confere a permissão de cada um deles"
+      ],
+      "answer": [1],
+      "explanation": "A falha é autorizar a operação, mas não cada item. As duas respostas seguras são negar o lote inteiro ou processar estritamente os IDs permitidos, conforme a regra de negócio, sem vazar nada dos demais."
+    },
+    {
+      "id": "idor-11",
+      "category": "correcao",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Qual é a correção principal de um IDOR?",
+      "options": [
+        "Substituir os IDs numéricos por UUIDs aleatórios em todas as rotas e considerar o problema totalmente resolvido",
+        "Verificar no servidor, a cada requisição, se o usuário autenticado tem permissão sobre aquele objeto",
+        "Ocultar na interface os links e botões que levam a objetos pertencentes a outros usuários da aplicação",
+        "Bloquear o endereço IP de qualquer cliente que faça muitas requisições seguidas em rotas de objetos"
+      ],
+      "answer": [1],
+      "explanation": "A decisão de acesso precisa ser tomada no servidor, objeto por objeto. Esconder links, trocar o formato do ID ou bloquear IPs não substituem a verificação."
+    },
+    {
+      "id": "idor-12",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Quais medidas ajudam a corrigir ou mitigar IDOR? (selecione todas)",
+      "options": [
+        "Filtrar a consulta pelo proprietário ou tenant, usando o ID e o dono na mesma cláusula",
+        "Obter a identidade a partir da sessão, e não de campos enviados pelo cliente",
+        "Centralizar a política de autorização para que todas as rotas usem a mesma regra",
+        "Criar testes automatizados A → B que garantem que o acesso cruzado é negado",
+        "Ocultar o parâmetro do ID com JavaScript no front-end",
+        "Usar HTTPS em todas as requisições"
+      ],
+      "answer": [0, 1, 2, 3],
+      "explanation": "As quatro primeiras atacam a causa. Ocultar parâmetros no front-end não impede que o cliente monte a requisição, e HTTPS protege o transporte, não a autorização."
+    },
+    {
+      "id": "idor-13",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual medida é apenas complementar e NÃO corrige IDOR sozinha?",
+      "options": [
+        "Filtrar a consulta ao banco de dados pelo proprietário do objeto",
+        "Aplicar uma política central de autorização verificada por objeto",
+        "Usar identificadores imprevisíveis (UUIDs) nas referências",
+        "Usar row-level security no banco para isolar dados entre tenants"
+      ],
+      "answer": [2],
+      "explanation": "IDs imprevisíveis são defesa em profundidade: dificultam adivinhar, mas quem obtém o ID continua passando se não houver autorização. As demais opções são controles de acesso reais."
+    },
+    {
+      "id": "idor-14",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Ana envia PATCH /api/profiles com um campo userId apontando para Bruno no corpo. Qual é a implementação segura?",
+      "options": [
+        "Aceitar o userId enviado no corpo sempre que ele for um número válido e dentro do intervalo esperado",
+        "Validar o formato do userId com uma expressão regular e, se estiver correto, aceitá-lo",
+        "Aceitar o userId enviado no corpo somente se esse usuário existir no banco de dados",
+        "Ignorar o userId do corpo e usar como alvo o usuário identificado pela sessão"
+      ],
+      "answer": [3],
+      "explanation": "A identidade do alvo vem da sessão, que o cliente não controla. Validar formato ou existência não responde à pergunta de autorização: esse usuário pode ser alterado por quem está logado?"
+    },
+    {
+      "id": "idor-15",
+      "category": "deteccao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Ana pede o pedido de Bruno e recebe 200 OK, mas o corpo é uma página genérica de erro, sem dados dele. O que concluir?",
+      "options": [
+        "IDOR confirmado, porque o status 200 mostra que o servidor aceitou a requisição feita com a sessão de Ana",
+        "Sem evidência de IDOR: um 200 isolado não prova acesso, é preciso ver dados ou efeito pertencentes a B",
+        "SQL Injection, porque a página de erro indica que a entrada chegou ao banco de dados da aplicação",
+        "SSRF, porque o servidor devolveu uma página diferente da esperada ao receber a referência alterada"
+      ],
+      "answer": [1],
+      "explanation": "A evidência forte é o acesso a conteúdo ou efeito específico do objeto de B. Páginas genéricas, objetos públicos e respostas filtradas não confirmam a falha."
+    },
+    {
+      "id": "idor-16",
+      "category": "deteccao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Ana envia um PATCH com o userId de Bruno e recebe 200. Qual verificação é indispensável antes de afirmar que há IDOR de escrita?",
+      "options": [
+        "Medir o tempo de resposta da requisição e compará-lo com o baseline da conta de Ana",
+        "Conferir se o cookie de sessão de Ana foi renovado na resposta do servidor",
+        "Nenhuma: o status 200 na resposta ao PATCH já confirma que o objeto foi alterado",
+        "Consultar o objeto de Bruno pela sessão dele e confirmar se o valor realmente mudou"
+      ],
+      "answer": [3],
+      "explanation": "A resposta do PATCH sozinha não prova alteração persistente. Verifique o estado pela sessão de B e, se possível, também o objeto de A, pois o servidor pode ter aplicado a mudança em quem estava logado."
+    },
+    {
+      "id": "idor-17",
+      "category": "deteccao",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Ana pede /api/orders/601, mas a resposta traz o pedido 501, que é dela. Como classificar?",
+      "options": [
+        "Comportamento seguro: o servidor usou a identidade da sessão e ignorou o ID, então não é IDOR",
+        "IDOR confirmado, porque o servidor respondeu 200 em vez de recusar a referência ao pedido de Bruno",
+        "Vazamento de dados, porque o pedido 501 foi exposto em uma rota que pedia outro identificador",
+        "SSRF, porque o servidor trocou por conta própria o destino da requisição que Ana havia enviado"
+      ],
+      "answer": [0],
+      "explanation": "Ver o próprio objeto não é acesso indevido. É um falso positivo comum: o servidor ignorou a referência enviada e aplicou a autorização pela sessão."
+    },
+    {
+      "id": "idor-18",
+      "category": "conceito",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual é a diferença entre BOLA (IDOR) e BFLA (API5:2023)?",
+      "options": [
+        "BOLA pergunta se o usuário pode usar uma função; BFLA pergunta se pode agir sobre um objeto",
+        "BOLA pergunta se o usuário pode agir sobre aquele objeto; BFLA pergunta se pode usar aquela função",
+        "BOLA só ocorre em operações de leitura, enquanto BFLA só ocorre em operações de escrita",
+        "Não há diferença: BOLA e BFLA são apenas dois nomes usados para a mesma falha de autorização"
+      ],
+      "answer": [1],
+      "explanation": "BOLA é por objeto (posso ver o pedido 601?). BFLA é por função (posso chamar o endpoint administrativo?). Podem coexistir no mesmo endpoint."
+    },
+    {
+      "id": "idor-19",
+      "category": "tipos",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Ana pertence à organização 10 e tem a fatura 9001; Bruno pertence à 20 e tem a 9002. Qual requisição testa se o servidor confere o vínculo entre a organização da URL e a fatura?",
+      "options": [
+        "GET /api/organizations/10/invoices/9001 com a sessão de Ana",
+        "GET /api/organizations/20/invoices/9002 com a sessão de Bruno",
+        "GET /api/organizations/10/invoices/9002 com a sessão de Ana",
+        "GET /api/organizations/10/invoices/9001 com a sessão de Ana, repetida cem vezes"
+      ],
+      "answer": [2],
+      "explanation": "Ana pertence à organização 10, então a validação do pai passa. Se a fatura 9002, que é da organização 20, voltar mesmo assim, o servidor não confere se o filho pertence ao pai da URL. As outras duas primeiras são requisições legítimas (baselines)."
+    },
+    {
+      "id": "idor-20",
+      "category": "deteccao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "O servidor responde 403 ao pedido de Bruno e 404 a um pedido inexistente. O que isso significa?",
+      "options": [
+        "IDOR confirmado, porque as respostas diferentes mostram que o servidor permitiu acesso ao pedido de Bruno",
+        "Falha de injeção, porque o servidor só consegue distinguir os dois casos se interpretar a referência como código",
+        "Nada relevante: qualquer diferença entre códigos de status deve ser ignorada em testes de autorização",
+        "Possível fuga de informação menor, pois revela que o objeto existe, mas não é IDOR, já que o conteúdo não foi entregue"
+      ],
+      "answer": [3],
+      "explanation": "O controle de autorização funcionou, mas as respostas diferentes permitem descobrir quais IDs existem. Vale registrar como observação, não como IDOR."
+    },
+    {
+      "id": "idor-21",
+      "category": "tipos",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Em uma API GraphQL, onde a autorização por objeto deve ser aplicada?",
+      "options": [
+        "Apenas no gateway da API, bloqueando o endpoint /graphql para usuários anônimos e liberando-o para os autenticados",
+        "Em cada resolvedor ou na camada de dados, verificando o objeto solicitado, e não só o acesso à query em geral",
+        "Somente na interface do cliente, ocultando os campos sensíveis que o usuário não deveria visualizar",
+        "Em lugar nenhum específico: desativar a introspecção do esquema em produção já resolve o problema"
+      ],
+      "answer": [1],
+      "explanation": "Como existe um único endpoint, a URL não diz qual objeto foi pedido. Se a checagem acontece só na query, qualquer usuário autenticado consegue consultar o ID de outro. Desativar introspecção esconde o esquema, mas não impõe permissão."
+    },
+    {
+      "id": "idor-22",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual evidência confirma IDOR em um endpoint de download de arquivos?",
+      "options": [
+        "O endpoint responder 200 com o Content-Type esperado de um PDF quando Ana pede o arquivo de Bruno",
+        "O endpoint demorar mais do que o normal para responder quando a referência do arquivo é trocada",
+        "O conteúdo do arquivo de B, como um marcador de teste conhecido, ser entregue à sessão de A",
+        "O identificador do arquivo ser um UUID em vez de um número sequencial na URL de download"
+      ],
+      "answer": [2],
+      "explanation": "Um 200 com PDF pode ser o arquivo de A ou um arquivo público. A prova é receber o conteúdo exclusivo de B (por exemplo, um texto de teste que você criou na conta B) usando a sessão de A."
+    }
+  ]
+}

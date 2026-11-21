@@ -1,0 +1,341 @@
+{
+  "id": "sqli",
+  "title": "SQL Injection",
+  "description": "Injeção de SQL: tipos, impacto, detecção e formas de correção",
+  "questions": [
+    {
+      "id": "sqli-01",
+      "category": "conceito",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "O que é SQL Injection?",
+      "options": [
+        "Falha em que dados controlados pelo usuário são interpretados como parte do comando SQL executado pelo banco",
+        "Falha em que o servidor da aplicação faz requisições a destinos internos ou externos escolhidos pelo atacante",
+        "Falha em que o navegador de um usuário autenticado envia uma ação indesejada usando o cookie da vítima",
+        "Falha em que um usuário acessa objetos de outro usuário apenas trocando o identificador na requisição"
+      ],
+      "answer": [0],
+      "explanation": "A raiz é misturar dados e código: a entrada do usuário é concatenada na consulta e deixa de ser tratada como simples valor."
+    },
+    {
+      "id": "sqli-02",
+      "category": "owasp",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Em qual categoria do OWASP Top 10:2025 a SQL Injection está classificada?",
+      "options": [
+        "A01:2025 – Broken Access Control",
+        "A02:2025 – Security Misconfiguration",
+        "A05:2025 – Injection",
+        "A06:2025 – Insecure Design"
+      ],
+      "answer": [2],
+      "explanation": "SQL Injection (CWE-89) está em A05:2025 – Injection. Na edição anterior, a mesma família era a A03:2021 – Injection."
+    },
+    {
+      "id": "sqli-03",
+      "category": "owasp",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "E no OWASP Top 10:2021, em qual categoria a SQL Injection estava?",
+      "options": [
+        "A01:2021 – Broken Access Control",
+        "A02:2021 – Cryptographic Failures",
+        "A06:2021 – Vulnerable and Outdated Components",
+        "A03:2021 – Injection"
+      ],
+      "answer": [3],
+      "explanation": "Em 2021, a categoria Injection era a A03. Em 2025 ela passou à posição A05, mantendo o mesmo conceito."
+    },
+    {
+      "id": "sqli-04",
+      "category": "tipos",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Quais são tipos de SQL Injection? (selecione todas)",
+      "options": [
+        "In-band, com retorno visível na própria resposta (baseada em erro ou em UNION)",
+        "Blind baseada em condição booleana",
+        "Blind baseada em tempo",
+        "Out-of-band, com a exfiltração por outro canal, como DNS ou HTTP",
+        "Fixação de sessão (session fixation)"
+      ],
+      "answer": [0, 1, 2, 3],
+      "explanation": "Os quatro primeiros são tipos clássicos de SQLi. Fixação de sessão é uma falha de gestão de sessão, sem relação com consultas SQL."
+    },
+    {
+      "id": "sqli-05",
+      "category": "tipos",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual é a diferença entre SQLi in-band e blind?",
+      "options": [
+        "A in-band só afeta bancos de dados comerciais, com licença paga; a blind só afeta bancos de dados de código aberto, sem suporte",
+        "A in-band exige acesso físico ao servidor do banco de dados; a blind pode ser explorada remotamente, pela internet, sem acesso privilegiado",
+        "A in-band só é possível em requisições GET, porque ficam visíveis na URL; a blind só é possível em requisições POST, no corpo",
+        "Na in-band o resultado aparece na própria resposta; na blind nada é devolvido diretamente e os dados são inferidos pelo comportamento ou pelo tempo"
+      ],
+      "answer": [3],
+      "explanation": "Na injeção blind a aplicação não mostra erros nem resultados da consulta. A extração é lenta e feita bit a bit, comparando respostas diferentes ou atrasos."
+    },
+    {
+      "id": "sqli-06",
+      "category": "tipos",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Para a técnica UNION funcionar, o que precisa ser verdade?",
+      "options": [
+        "O número de colunas e os tipos de dados da consulta injetada devem ser compatíveis com os da consulta original",
+        "A consulta original precisa estar escrita com prepared statements para que a união de resultados seja aceita",
+        "O banco de dados precisa estar hospedado em outro servidor, separado do servidor web, para aceitar o operador UNION",
+        "A aplicação precisa estar servida por HTTP sem criptografia, pois o UNION não funciona sobre conexões HTTPS"
+      ],
+      "answer": [0],
+      "explanation": "Um UNION exige o mesmo número de colunas e tipos compatíveis. Por isso, na prática, o testador descobre primeiro a quantidade de colunas da consulta original."
+    },
+    {
+      "id": "sqli-07",
+      "category": "exploracao",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Qual é um primeiro sinal típico usado para suspeitar de SQL Injection em um parâmetro?",
+      "options": [
+        "Medir a latência da rede entre o computador de quem testa e o servidor, comparando vários horários do dia",
+        "Enviar um caractere especial, como aspas simples, e observar um erro ou uma mudança de comportamento",
+        "Verificar a validade do certificado TLS do site e se o servidor aceita apenas versões modernas do protocolo",
+        "Ler o cabeçalho Server da resposta para descobrir qual servidor web e qual versão a aplicação utiliza"
+      ],
+      "answer": [1],
+      "explanation": "Um caractere especial que quebra a sintaxe da consulta (ou muda o resultado de forma controlada) é o primeiro indício. A confirmação exige comparar respostas com entradas verdadeiras e falsas."
+    },
+    {
+      "id": "sqli-08",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Como funciona uma SQL Injection blind baseada em tempo?",
+      "options": [
+        "O atacante lê as mensagens de erro detalhadas devolvidas pelo banco de dados e extrai os dados diretamente delas, sem medir tempo",
+        "O atacante injeta uma condição que, quando verdadeira, faz o banco demorar a responder, e infere os dados medindo o tempo",
+        "O atacante faz o banco de dados enviar os dados extraídos para um servidor externo que ele controla, por meio de uma consulta DNS",
+        "O atacante altera o relógio do servidor de banco de dados para que a sessão do usuário expire e a autenticação seja ignorada"
+      ],
+      "answer": [1],
+      "explanation": "Funções de espera do SGBD criam um sinal mensurável mesmo sem nenhuma diferença visível na página. O método é lento e sujeito a ruído de rede, por isso exige repetição e controle."
+    },
+    {
+      "id": "sqli-09",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Ao testar um parâmetro, uma condição injetada verdadeira e outra falsa retornam páginas diferentes, sem nenhum erro de banco visível. O que isso indica?",
+      "options": [
+        "Uma provável falha de CSRF, pois a página muda de acordo com a origem da requisição recebida pelo servidor",
+        "Uma provável falha de autenticação, pois a página muda de acordo com a senha enviada pelo usuário",
+        "Um provável SQL Injection blind baseada em booleano, pois a resposta varia conforme a condição injetada",
+        "Um comportamento normal de qualquer aplicação dinâmica, que não indica nenhuma falha de segurança"
+      ],
+      "answer": [2],
+      "explanation": "Quando a resposta varia de forma controlada conforme a condição injetada, o atacante consegue fazer perguntas de sim ou não ao banco. Confirme com mais de um par de condições para descartar coincidências."
+    },
+    {
+      "id": "sqli-10",
+      "category": "tipos",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "O que é SQL Injection de segunda ordem (second-order)?",
+      "options": [
+        "A injeção que só funciona na segunda tentativa, depois que a primeira requisição altera o estado da sessão do usuário",
+        "A injeção em que o payload é armazenado pela aplicação e só é executado depois, em outra consulta que o reutiliza sem tratamento",
+        "A injeção feita em dois bancos de dados ao mesmo tempo, por meio de duas consultas enviadas na mesma requisição",
+        "A injeção que depende de duas contas de usuário, uma que envia o payload e outra que recebe os dados extraídos"
+      ],
+      "answer": [1],
+      "explanation": "O dado foi tratado ao ser gravado, mas é considerado confiável quando lido de novo e concatenado em outra consulta. Por isso a parametrização deve valer em todas as consultas, inclusive com dados vindos do próprio banco."
+    },
+    {
+      "id": "sqli-11",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Em qual contexto a injeção pode funcionar sem usar aspas?",
+      "options": [
+        "Nunca: toda SQL Injection precisa fechar aspas antes de inserir o restante da consulta injetada",
+        "Somente em bancos NoSQL, que não usam aspas para delimitar valores em suas consultas",
+        "Somente quando o parâmetro está dentro de uma string delimitada por aspas na consulta original",
+        "Quando o valor é concatenado em um contexto numérico, sem aspas na consulta original"
+      ],
+      "answer": [3],
+      "explanation": "Em uma consulta como WHERE id = <valor>, não há aspas a fechar. Filtrar apenas aspas, portanto, não protege parâmetros numéricos."
+    },
+    {
+      "id": "sqli-12",
+      "category": "exploracao",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Quais impactos uma SQL Injection pode ter? (selecione todas)",
+      "options": [
+        "Leitura de dados a que o usuário não deveria ter acesso",
+        "Alteração ou exclusão de dados",
+        "Bypass de autenticação em fluxos de login vulneráveis",
+        "Em certos SGBDs e com privilégios altos, execução de comandos no sistema operacional",
+        "Execução direta de JavaScript no navegador da vítima"
+      ],
+      "answer": [0, 1, 2, 3],
+      "explanation": "O alcance depende do SGBD e dos privilégios da conta usada pela aplicação. Executar JavaScript no navegador da vítima é característico do XSS, não da SQLi."
+    },
+    {
+      "id": "sqli-13",
+      "category": "correcao",
+      "difficulty": "facil",
+      "type": "single",
+      "question": "Qual é a defesa principal contra SQL Injection?",
+      "options": [
+        "Consultas parametrizadas (prepared statements), que separam o código SQL dos valores",
+        "Remover palavras como SELECT, UNION e DROP da entrada antes de montar a consulta",
+        "Usar HTTPS em todas as conexões entre o navegador, a aplicação e o banco de dados",
+        "Limitar o tamanho dos campos de texto a poucos caracteres antes de enviá-los ao banco"
+      ],
+      "answer": [0],
+      "explanation": "Com parâmetros, o banco recebe a estrutura da consulta e os valores separadamente, e o valor nunca é interpretado como código."
+    },
+    {
+      "id": "sqli-14",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "multi",
+      "question": "Quais medidas ajudam a prevenir ou reduzir o impacto de SQL Injection? (selecione todas)",
+      "options": [
+        "Consultas parametrizadas",
+        "ORM usado de forma segura, sem concatenar entrada em consultas brutas",
+        "Conta de banco com o menor privilégio possível",
+        "Lista de permissão (allowlist) para identificadores dinâmicos, como a coluna de ordenação",
+        "Remover somente as aspas simples da entrada",
+        "Usar HTTPS"
+      ],
+      "answer": [0, 1, 2, 3],
+      "explanation": "As quatro primeiras atacam a causa ou limitam o dano. Remover aspas é uma defesa frágil (parâmetros numéricos e outras sintaxes passam), e HTTPS protege apenas o transporte."
+    },
+    {
+      "id": "sqli-15",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Por que prepared statements não resolvem nomes de tabela ou coluna vindos do usuário?",
+      "options": [
+        "Porque consultas parametrizadas só funcionam em versões antigas dos bancos de dados e não existem nas versões atuais",
+        "Porque parâmetros representam valores, não identificadores; nesses casos é preciso mapear a entrada para uma lista de permissão",
+        "Porque o banco de dados ignora qualquer parâmetro usado dentro de uma cláusula ORDER BY ou GROUP BY",
+        "Porque nomes de tabela e de coluna nunca podem causar injeção, então não precisam de nenhum tratamento"
+      ],
+      "answer": [1],
+      "explanation": "Um parâmetro vincula um valor, e não um nome de coluna. Para ORDER BY dinâmico, mapeie a opção do usuário a nomes fixos conhecidos pelo servidor."
+    },
+    {
+      "id": "sqli-16",
+      "category": "correcao",
+      "difficulty": "dificil",
+      "type": "single",
+      "question": "Stored procedures são imunes a SQL Injection?",
+      "options": [
+        "Sim, sempre, porque o código SQL fica armazenado no banco e o atacante não consegue alterá-lo",
+        "Sim, desde que o banco de dados seja relacional e o usuário da aplicação não seja administrador",
+        "Não: se a procedure concatena a entrada em uma consulta dinâmica, continua vulnerável",
+        "Não: stored procedures são sempre mais inseguras do que consultas parametrizadas na aplicação"
+      ],
+      "answer": [2],
+      "explanation": "O que protege é a separação entre código e valores, e não o local onde a consulta está. Procedures que montam SQL dinâmico a partir de parâmetros reproduzem a falha dentro do banco."
+    },
+    {
+      "id": "sqli-17",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Qual é o papel de um WAF contra SQL Injection?",
+      "options": [
+        "Camada compensatória que pode bloquear padrões conhecidos, mas não substitui o código seguro",
+        "Substitui totalmente as consultas parametrizadas, pois filtra qualquer entrada maliciosa antes da aplicação",
+        "Corrige automaticamente o código vulnerável da aplicação, reescrevendo as consultas SQL em tempo de execução",
+        "Impede qualquer tipo de injeção, inclusive as de segunda ordem, por inspecionar toda a entrada recebida"
+      ],
+      "answer": [0],
+      "explanation": "Um WAF ajuda a reduzir ruído e ataques conhecidos, mas pode ser contornado por codificações e variações. A correção real está no código da aplicação."
+    },
+    {
+      "id": "sqli-18",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Por que escapar manualmente a entrada do usuário é fortemente desencorajado como defesa contra SQLi?",
+      "options": [
+        "Porque nenhum banco de dados aceita caracteres escapados dentro de uma consulta SQL, em nenhuma versão",
+        "Porque torna a aplicação muito mais lenta em todos os casos, o que a deixa vulnerável a negação de serviço",
+        "Porque só funciona em consultas SELECT, e deixa sem proteção as consultas de inserção e atualização",
+        "Porque é frágil: depende do SGBD, da codificação e do contexto, e é fácil esquecer um ponto de entrada"
+      ],
+      "answer": [3],
+      "explanation": "A orientação da OWASP é preferir consultas parametrizadas. O escape manual só é considerado em último caso, com cuidado específico para cada SGBD."
+    },
+    {
+      "id": "sqli-19",
+      "category": "conceito",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Usar um ORM elimina o risco de SQL Injection?",
+      "options": [
+        "Sim, em qualquer uso, pois o ORM sempre trata toda entrada como dado, inclusive em consultas brutas",
+        "Sim, desde que o banco de dados esteja atualizado e a versão do ORM seja a mais recente disponível",
+        "Não: o risco volta quando se concatena entrada em consultas brutas ou em fragmentos dinâmicos fornecidos ao ORM",
+        "Não: ORMs sempre geram consultas vulneráveis, pois montam o SQL concatenando os valores recebidos"
+      ],
+      "answer": [2],
+      "explanation": "O ORM parametriza as consultas que ele mesmo gera. Métodos de consulta bruta (raw) ou fragmentos de ORDER BY e WHERE montados com strings reabrem a falha."
+    },
+    {
+      "id": "sqli-20",
+      "category": "correcao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Como o princípio do menor privilégio ajuda contra SQL Injection?",
+      "options": [
+        "Impede que qualquer consulta seja injetada, pois o banco rejeita comandos que a conta não pode executar",
+        "Substitui a necessidade de validar a entrada e de parametrizar as consultas, já que o banco limita tudo",
+        "Limita o dano: a conta da aplicação não deve ter, por exemplo, permissão para alterar o esquema nem acessar outros bancos",
+        "Criptografa as consultas SQL na rede, de modo que um atacante não consiga ler nem alterar os comandos"
+      ],
+      "answer": [2],
+      "explanation": "É defesa em profundidade: não impede a injeção, mas reduz o que um atacante consegue fazer se ela ocorrer. Funciona junto com a parametrização, não no lugar dela."
+    },
+    {
+      "id": "sqli-21",
+      "category": "tipos",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Quando uma SQLi out-of-band costuma ser considerada?",
+      "options": [
+        "Quando a aplicação mostra os erros detalhados do banco de dados na tela e o atacante consegue ler os dados diretamente neles",
+        "Quando o banco de dados está desligado para manutenção e a aplicação passa a responder apenas com páginas de erro genéricas",
+        "Quando o parâmetro é numérico e a aplicação devolve o resultado completo da consulta, em formato de tabela, na própria página",
+        "Quando a resposta não mostra os dados nem varia de forma útil, e o banco consegue iniciar uma conexão externa (DNS ou HTTP) para entregar a informação"
+      ],
+      "answer": [3],
+      "explanation": "Quando não há retorno visível nem diferenças confiáveis de tempo ou conteúdo, um canal alternativo pode funcionar, desde que o banco tenha permissão de rede para isso."
+    },
+    {
+      "id": "sqli-22",
+      "category": "deteccao",
+      "difficulty": "medio",
+      "type": "single",
+      "question": "Uma página devolve uma mensagem detalhada de erro do banco de dados ao receber uma aspa simples. Qual é a leitura mais adequada?",
+      "options": [
+        "É um comportamento normal e seguro, pois ajuda a equipe de suporte a diagnosticar problemas em produção",
+        "Prova que o banco de dados é antigo, e a correção é apenas atualizar o servidor de banco de dados",
+        "Indica que a aplicação é vulnerável a XSS, pois o navegador exibiu um texto que veio do servidor",
+        "É um forte indício de SQLi e também uma má prática: mensagens detalhadas devem ser desativadas em produção"
+      ],
+      "answer": [3],
+      "explanation": "O erro mostra que a entrada chegou ao parser SQL e ainda revela detalhes internos. Confirme a injeção com testes controlados e registre também a exposição de informações."
+    }
+  ]
+}
